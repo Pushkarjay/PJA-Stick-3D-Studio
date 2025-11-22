@@ -81,5 +81,5 @@ jobs:
           --platform managed \
           --region ${{ env.REGION }} \
           --allow-unauthenticated \
-          --set-env-vars "NODE_ENV=production" \
-          --set-secrets="FIREBASE_PRIVATE_KEY=FIREBASE_PRIVATE_KEY:latest,JWT_SECRET=JWT_SECRET:latest,RAZORPAY_KEY_SECRET=RAZORPAY_KEY_SECRET:latest"
+          --timeout=300 \
+          --set-env-vars "NODE_ENV=production,FIREBASE_PROJECT_ID=pja3d-fire,FIREBASE_STORAGE_BUCKET=pja3d-fire.appspot.com,PORT=8080,JWT_SECRET=pja3d-production-secret-2025-xyz789,ALLOWED_ORIGINS=https://pja3d-fire.web.app"
