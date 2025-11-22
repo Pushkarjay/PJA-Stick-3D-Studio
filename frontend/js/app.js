@@ -4,7 +4,7 @@
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000/api'
-  : '/api';
+  : 'https://pja3d-backend-369377967204.asia-south1.run.app/api';
 
 // Global State
 let cart = JSON.parse(localStorage.getItem('pjaCart')) || [];
