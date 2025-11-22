@@ -18,24 +18,32 @@ function initializeFirebase() {
       return;
     }
 
-    // Try to use service account JSON file first, then fall back to environment variables
-    const serviceAccountPath = path.join(__dirname, '../..', 'config', 'pja3d-fire-firebase-adminsdk-fbsvc-96219dabc7.json');
     let credential;
-
-    if (fs.existsSync(serviceAccountPath)) {
-      logger.info('Using Firebase service account JSON file');
-      const serviceAccount = require(serviceAccountPath);
-      credential = admin.credential.cert(serviceAccount);
-    } else if (process.env.FIREBASE_PRIVATE_KEY) {
-      logger.info('Using Firebase credentials from environment variables');
-      const serviceAccount = {
-        projectId: process.env.FIREBASE_PROJECT_ID,
-        clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
-        privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
-      };
-      credential = admin.credential.cert(serviceAccount);
-    } else {
-      throw new Error('No Firebase credentials found. Please provide service account JSON or environment variables.');
+    
+    // On Cloud Run, use Application Default Credentials
+    if (process.env.K_SERVICE) {
+      logger.info('Running on Cloud Run, using Application Default Credentials');
+      credential = admin.credential.applicationDefault();
+    }
+    // Try to use service account JSON file
+    else {
+      const serviceAccountPath = path.join(__dirname, '../..', 'config', 'pja3d-fire-firebase-adminsdk-fbsvc-96219dabc7.json');
+      
+      if (fs.existsSync(serviceAccountPath)) {
+        logger.info('Using Firebase service account JSON file');
+        const serviceAccount = require(serviceAccountPath);
+        credential = admin.credential.cert(serviceAccount);
+      } else if (process.env.FIREBASE_PRIVATE_KEY) {
+        logger.info('Using Firebase credentials from environment variables');
+        const serviceAccount = {
+          projectId: process.env.FIREBASE_PROJECT_ID,
+          clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+          privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
+        };
+        credential = admin.credential.cert(serviceAccount);
+      } else {
+        throw new Error('No Firebase credentials found. Please provide service account JSON or environment variables.');
+      }
     }
 
     admin.initializeApp({
