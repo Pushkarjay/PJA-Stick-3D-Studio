@@ -1,21 +1,14 @@
-const Razorpay = require('razorpay');
 const crypto = require('crypto');
 const { getFirestore } = require('../config/firebase');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
-// Initialize Razorpay
-const razorpay = new Razorpay({
-  key_id: process.env.RAZORPAY_KEY_ID,
-  key_secret: process.env.RAZORPAY_KEY_SECRET
-});
-
 /**
- * Create payment order
+ * Create payment order with Cash on Delivery
  */
 exports.createPaymentOrder = async (req, res, next) => {
   try {
-    const { orderId, amount } = req.body;
+    const { orderId, amount, paymentMethod } = req.body;
     const db = getFirestore();
 
     // Verify order exists
@@ -26,29 +19,23 @@ exports.createPaymentOrder = async (req, res, next) => {
 
     const orderData = orderDoc.data();
 
-    // Create Razorpay order
-    const options = {
-      amount: Math.round(amount * 100), // Convert to paise
+    // Support Cash on Delivery, UPI, or Offline payment
+    const paymentData = {
+      method: paymentMethod || 'cod', // cod, upi, offline
+      amount: amount,
       currency: 'INR',
-      receipt: orderData.orderNumber,
-      notes: {
-        orderId,
-        customerId: req.user.uid
-      }
+      status: 'pending',
+      orderId: orderId,
+      orderNumber: orderData.orderNumber,
+      createdAt: new Date()
     };
 
-    const razorpayOrder = await razorpay.orders.create(options);
-
-    logger.info(`Payment order created: ${razorpayOrder.id}`);
+    logger.info(`Payment order created for ${paymentMethod}: ${orderId}`);
 
     res.json({
       success: true,
-      data: {
-        orderId: razorpayOrder.id,
-        amount: razorpayOrder.amount,
-        currency: razorpayOrder.currency,
-        keyId: process.env.RAZORPAY_KEY_ID
-      }
+      message: 'Order placed successfully! We will contact you soon.',
+      data: paymentData
     });
   } catch (error) {
     next(error);
@@ -56,57 +43,46 @@ exports.createPaymentOrder = async (req, res, next) => {
 };
 
 /**
- * Verify payment signature
+ * Verify offline/manual payment (Admin only)
  */
 exports.verifyPayment = async (req, res, next) => {
   try {
-    const {
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature,
-      orderId
-    } = req.body;
+    const { orderId, transactionId, paymentMethod, notes } = req.body;
 
-    // Verify signature
-    const body = razorpay_order_id + '|' + razorpay_payment_id;
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-      .update(body.toString())
-      .digest('hex');
-
-    const isValid = expectedSignature === razorpay_signature;
-
-    if (!isValid) {
-      throw new AppError('Invalid payment signature', 400, 'INVALID_SIGNATURE');
-    }
-
-    // Update order payment status
+    // Update order payment status (manual confirmation by admin)
     const db = getFirestore();
     const orderRef = db.collection('orders').doc(orderId);
     const orderDoc = await orderRef.get();
+    
+    if (!orderDoc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+
     const orderData = orderDoc.data();
 
     await orderRef.update({
       'payment.status': 'completed',
-      'payment.transactionId': razorpay_payment_id,
+      'payment.method': paymentMethod || 'offline',
+      'payment.transactionId': transactionId || 'OFFLINE',
       'payment.paidAt': new Date(),
+      'payment.notes': notes || '',
       status: 'confirmed',
       timeline: [
         ...orderData.timeline,
         {
           status: 'confirmed',
           timestamp: new Date(),
-          note: 'Payment successful'
+          note: notes || 'Payment received (manual confirmation)'
         }
       ],
       updatedAt: new Date()
     });
 
-    logger.info(`Payment verified: ${razorpay_payment_id} for order ${orderId}`);
+    logger.info(`Payment verified manually for order ${orderId}`);
 
     res.json({
       success: true,
-      message: 'Payment verified successfully'
+      message: 'Payment marked as received'
     });
   } catch (error) {
     next(error);
@@ -114,45 +90,38 @@ exports.verifyPayment = async (req, res, next) => {
 };
 
 /**
- * Handle Razorpay webhook
+ * Get payment methods (for frontend)
  */
-exports.handleWebhook = async (req, res, next) => {
+exports.getPaymentMethods = async (req, res, next) => {
   try {
-    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
-    const signature = req.headers['x-razorpay-signature'];
+    const paymentMethods = [
+      {
+        id: 'cod',
+        name: 'Cash on Delivery',
+        description: 'Pay when you receive your order',
+        icon: '💵',
+        enabled: true
+      },
+      {
+        id: 'upi',
+        name: 'UPI Payment',
+        description: 'PhonePe, Google Pay, Paytm',
+        icon: '📱',
+        enabled: true
+      },
+      {
+        id: 'offline',
+        name: 'Pay at Store',
+        description: 'Visit us at Suresh Singh Chowk',
+        icon: '🏪',
+        enabled: true
+      }
+    ];
 
-    // Verify webhook signature
-    const expectedSignature = crypto
-      .createHmac('sha256', webhookSecret)
-      .update(JSON.stringify(req.body))
-      .digest('hex');
-
-    if (signature !== expectedSignature) {
-      throw new AppError('Invalid webhook signature', 400, 'INVALID_SIGNATURE');
-    }
-
-    const event = req.body.event;
-    const payload = req.body.payload;
-
-    logger.info(`Webhook received: ${event}`);
-
-    // Handle different events
-    switch (event) {
-      case 'payment.captured':
-        // Payment successful
-        logger.info(`Payment captured: ${payload.payment.entity.id}`);
-        break;
-
-      case 'payment.failed':
-        // Payment failed
-        logger.info(`Payment failed: ${payload.payment.entity.id}`);
-        break;
-
-      default:
-        logger.info(`Unhandled webhook event: ${event}`);
-    }
-
-    res.json({ success: true });
+    res.json({
+      success: true,
+      data: paymentMethods
+    });
   } catch (error) {
     next(error);
   }
