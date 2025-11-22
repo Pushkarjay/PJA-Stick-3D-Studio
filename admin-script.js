@@ -90,7 +90,8 @@ function initializeProducts() {
         material: "PLA (Dual Color)",
         description: "The viral 3D gift! Shows one name from the left and another from the right. Perfect for couples.",
         price: "Medium",
-        trending: true
+        trending: true,
+        imageUrl: ""
       },
       {
         id: 102,
@@ -102,7 +103,8 @@ function initializeProducts() {
         material: "White PLA",
         description: "A textured moon that glows. Can include a hidden photo (lithophane) or text on the surface.",
         price: "High",
-        trending: true
+        trending: true,
+        imageUrl: ""
       },
       {
         id: 1,
@@ -113,7 +115,8 @@ function initializeProducts() {
         time: "4-6 Hours",
         material: "White PLA",
         description: "Turn your favorite memory into a glowing masterpiece. Looks like a relief carving until backlit.",
-        price: "Custom"
+        price: "Custom",
+        imageUrl: ""
       },
       {
         id: 103,
@@ -124,7 +127,8 @@ function initializeProducts() {
         time: "6-8 Hours",
         material: "Silk Gold PLA",
         description: "Premium finished idols for home mandirs or car dashboards. Inspired by the 'Divine Collection'.",
-        price: "Medium"
+        price: "Medium",
+        imageUrl: ""
       },
       {
         id: 2,
@@ -135,7 +139,8 @@ function initializeProducts() {
         time: "Instant",
         material: "Vinyl (Waterproof)",
         description: "Premium waterproof skins for laptops and mobiles. Anime, Devotional, or Custom designs available.",
-        price: "Low"
+        price: "Low",
+        imageUrl: ""
       },
       {
         id: 104,
@@ -146,7 +151,8 @@ function initializeProducts() {
         time: "2-3 Hours",
         material: "PLA (Red/White)",
         description: "Minimalist text stand showing your special date and names. Great budget anniversary gift.",
-        price: "Low"
+        price: "Low",
+        imageUrl: ""
       },
       {
         id: 3,
@@ -157,7 +163,8 @@ function initializeProducts() {
         time: "Fast",
         material: "A4 Bond Paper",
         description: "High-quality Black & White or Color printing for college assignments, reports, and projects.",
-        price: "Low"
+        price: "Low",
+        imageUrl: ""
       },
       {
         id: 4,
@@ -168,7 +175,8 @@ function initializeProducts() {
         time: "2-3 Hours",
         material: "Yellow PLA",
         description: "A cute, geometric style Pikachu perfect for desk setups.",
-        price: "Medium"
+        price: "Medium",
+        imageUrl: ""
       },
       {
         id: 5,
@@ -179,7 +187,8 @@ function initializeProducts() {
         time: "3-5 Hours",
         material: "Silk PLA",
         description: "Printed in 'Vase Mode' for a seamless, elegant finish.",
-        price: "Medium"
+        price: "Medium",
+        imageUrl: ""
       },
       {
         id: 6,
@@ -190,7 +199,8 @@ function initializeProducts() {
         time: "6-8 Hours",
         material: "Grey PLA",
         description: "Detailed miniature of Naruto. Great for painting.",
-        price: "High"
+        price: "High",
+        imageUrl: ""
       },
       {
         id: 7,
@@ -201,7 +211,8 @@ function initializeProducts() {
         time: "1-2 Hours",
         material: "Dual Color PLA",
         description: "Personalized name tags for desks, doors, or keychains.",
-        price: "Low"
+        price: "Low",
+        imageUrl: ""
       },
       {
         id: 8,
@@ -212,7 +223,8 @@ function initializeProducts() {
         time: "4-5 Hours",
         material: "PLA",
         description: "Display your Xbox or PS5 controllers in style.",
-        price: "Medium"
+        price: "Medium",
+        imageUrl: ""
       }
     ];
     localStorage.setItem('pjaProducts', JSON.stringify(defaultProducts));
@@ -306,6 +318,7 @@ function openProductModal(productId = null) {
       document.getElementById('productPrice').value = product.price;
       document.getElementById('productDescription').value = product.description;
       document.getElementById('productTrending').checked = product.trending || false;
+      document.getElementById('productImageUrl').value = product.imageUrl || '';
     }
   } else {
     title.textContent = 'Add New Product';
@@ -340,7 +353,8 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     material: document.getElementById('productMaterial').value,
     price: document.getElementById('productPrice').value,
     description: document.getElementById('productDescription').value,
-    trending: document.getElementById('productTrending').checked
+    trending: document.getElementById('productTrending').checked,
+    imageUrl: document.getElementById('productImageUrl').value
   };
   
   if (productId) {

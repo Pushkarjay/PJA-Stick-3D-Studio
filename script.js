@@ -148,141 +148,6 @@ const defaultProducts = [
 // Load products (from admin updates or defaults)
 let products = loadProductsData();
 
-// SVG Icons
-const svgIcons = {
-  lithophane: `<svg viewBox="0 0 100 100" class="product-svg">
-    <rect x="20" y="15" width="60" height="70" rx="4" fill="#f3f4f6" stroke="#d1d5db" stroke-width="2" />
-    <rect x="25" y="20" width="50" height="45" rx="2" fill="#e5e7eb" />
-    <circle cx="40" cy="35" r="8" fill="#d1d5db" />
-    <path d="M25 65 L40 45 L55 60 L65 50 L75 65 Z" fill="#9ca3af" />
-    <rect x="25" y="70" width="50" height="4" rx="2" fill="#cbd5e1" />
-    <path d="M20 15 L10 90 L90 90 L80 15 Z" fill="url(#lightGrad)" opacity="0.2" />
-    <defs>
-      <linearGradient id="lightGrad" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="#fbbf24" stop-opacity="0.8"/>
-        <stop offset="100%" stop-color="#fbbf24" stop-opacity="0"/>
-      </linearGradient>
-    </defs>
-  </svg>`,
-
-  flipName: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M20 70 L80 70 L90 80 L10 80 Z" fill="#334155" />
-    <path d="M25 65 L25 35 L35 30 L35 60" fill="#ef4444" opacity="0.9" /> 
-    <path d="M40 65 L40 35 L50 30 L50 60" fill="#ef4444" opacity="0.9" />
-    <path d="M35 60 L55 60 L60 40 L40 40" fill="#3b82f6" opacity="0.8" />
-    <text x="50" y="25" font-size="8" text-anchor="middle" fill="#64748b">FLIP ME</text>
-    <path d="M45 15 Q50 10 55 15" stroke="#64748b" stroke-width="1" fill="none" marker-end="url(#arrow)" />
-  </svg>`,
-
-  moonLamp: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M30 80 L40 60 L60 60 L70 80" fill="none" stroke="#9ca3af" stroke-width="3" />
-    <circle cx="50" cy="45" r="30" fill="#fef3c7" />
-    <circle cx="40" cy="35" r="4" fill="#fde68a" opacity="0.6" />
-    <circle cx="60" cy="50" r="6" fill="#fde68a" opacity="0.6" />
-    <circle cx="45" cy="60" r="3" fill="#fde68a" opacity="0.6" />
-    <circle cx="50" cy="45" r="35" fill="url(#moonGlow)" opacity="0.3" />
-    <defs>
-      <radialGradient id="moonGlow">
-        <stop offset="0%" stop-color="#fffbeb" />
-        <stop offset="100%" stop-color="#fffbeb" stop-opacity="0" />
-      </radialGradient>
-    </defs>
-  </svg>`,
-
-  idol: `<svg viewBox="0 0 100 100" class="product-svg">
-    <circle cx="50" cy="40" r="25" stroke="#fbbf24" stroke-width="2" stroke-dasharray="4 2" fill="none" />
-    <path d="M50 25 C60 25 65 35 65 50 C65 70 80 80 80 85 L20 85 C20 80 35 70 35 50 C35 35 40 25 50 25" fill="#f59e0b" />
-    <rect x="15" y="85" width="70" height="5" fill="#78350f" />
-  </svg>`,
-
-  pikachu: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M20 60 L30 50 L25 40 L40 30 L35 20 L60 30" stroke="#ca8a04" stroke-width="4" fill="none" />
-    <circle cx="50" cy="60" r="25" fill="#facc15" />
-    <ellipse cx="35" cy="35" rx="5" ry="15" transform="rotate(-30 35 35)" fill="#facc15" />
-    <ellipse cx="35" cy="25" rx="5" ry="5" transform="rotate(-30 35 35)" fill="#000" />
-    <ellipse cx="65" cy="35" rx="5" ry="15" transform="rotate(30 65 35)" fill="#facc15" />
-    <ellipse cx="65" cy="25" rx="5" ry="5" transform="rotate(30 65 35)" fill="#000" />
-    <circle cx="42" cy="55" r="2" fill="#000" />
-    <circle cx="58" cy="55" r="2" fill="#000" />
-    <circle cx="38" cy="62" r="3" fill="#ef4444" />
-    <circle cx="62" cy="62" r="3" fill="#ef4444" />
-    <path d="M47 60 Q50 63 53 60" stroke="#000" stroke-width="1" fill="none" />
-  </svg>`,
-
-  naruto: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M30 40 L25 25 L40 35 L50 20 L60 35 L75 25 L70 40 Z" fill="#facc15" stroke="#ca8a04" stroke-width="1"/>
-    <rect x="28" y="38" width="44" height="10" rx="2" fill="#1e293b" />
-    <rect x="40" y="40" width="20" height="6" rx="1" fill="#94a3b8" />
-    <circle cx="50" cy="43" r="2" stroke="#475569" stroke-width="1" fill="none" />
-    <path d="M48 43 L52 43" stroke="#475569" stroke-width="1" />
-    <circle cx="50" cy="55" r="18" fill="#fdba74" />
-    <path d="M38 52 L42 54 M38 56 L42 58 M38 60 L42 62" stroke="#000" opacity="0.5" />
-    <path d="M62 52 L58 54 M62 56 L58 58 M62 60 L58 62" stroke="#000" opacity="0.5" />
-  </svg>`,
-
-  vase: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M40 80 L30 30 L40 20 L60 20 L70 30 L60 80 Z" fill="#2dd4bf" opacity="0.8" />
-    <path d="M40 80 L45 50 L60 80 Z" fill="#14b8a6" opacity="0.6" />
-    <path d="M30 30 L45 50 L70 30" fill="none" stroke="#ccfbf1" stroke-width="1" />
-    <ellipse cx="50" cy="20" rx="10" ry="3" fill="#0f766e" />
-  </svg>`,
-
-  controllerStand: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M30 60 L30 40 L70 40 L70 60 L60 70 L40 70 Z" fill="#6366f1" />
-    <circle cx="40" cy="50" r="5" fill="#e0e7ff" />
-    <circle cx="60" cy="50" r="5" fill="#e0e7ff" />
-    <rect x="40" y="70" width="20" height="10" fill="#4338ca" />
-  </svg>`,
-
-  namePlate: `<svg viewBox="0 0 100 100" class="product-svg">
-    <rect x="15" y="35" width="70" height="30" rx="4" fill="#f472b6" />
-    <rect x="20" y="40" width="60" height="20" rx="2" fill="#fbcfe8" />
-    <text x="50" y="55" font-size="10" text-anchor="middle" fill="#be185d" font-family="sans-serif" font-weight="bold">NAME</text>
-  </svg>`,
-
-  sticker: `<svg viewBox="0 0 100 100" class="product-svg">
-    <path d="M30 30 L70 30 L70 70 L60 80 L30 80 Z" fill="#f8fafc" stroke="#cbd5e1" stroke-width="2" />
-    <path d="M70 70 L60 70 L60 80" fill="#cbd5e1" />
-    <circle cx="50" cy="50" r="15" fill="#f43f5e" opacity="0.8" />
-    <path d="M45 45 L55 55 M55 45 L45 55" stroke="#fff" stroke-width="3" />
-    <text x="50" y="75" font-size="8" text-anchor="middle" fill="#64748b">STICKY</text>
-  </svg>`,
-
-  document: `<svg viewBox="0 0 100 100" class="product-svg">
-    <rect x="30" y="20" width="40" height="60" fill="#fff" stroke="#94a3b8" stroke-width="2" />
-    <line x1="35" y1="30" x2="65" y2="30" stroke="#cbd5e1" stroke-width="2" />
-    <line x1="35" y1="40" x2="65" y2="40" stroke="#cbd5e1" stroke-width="2" />
-    <line x1="35" y1="50" x2="55" y2="50" stroke="#cbd5e1" stroke-width="2" />
-    <rect x="55" y="60" width="20" height="20" fill="#22c55e" rx="2" />
-    <path d="M65 65 L65 75 M60 70 L70 70" stroke="#fff" stroke-width="2" />
-  </svg>`,
-
-  datePlank: `<svg viewBox="0 0 100 100" class="product-svg">
-    <rect x="15" y="60" width="70" height="15" fill="#e2e8f0" rx="2" />
-    <text x="50" y="71" font-size="8" text-anchor="middle" fill="#475569" font-family="monospace">12.05.2025</text>
-    <path d="M25 60 L25 30 Q35 20 45 30 L50 35 L55 30 Q65 20 75 30 L75 60" fill="#f43f5e" opacity="0.8" />
-  </svg>`
-};
-
-// Get icon based on product ID
-function getProductIcon(product) {
-  const iconMap = {
-    101: 'flipName',
-    102: 'moonLamp',
-    1: 'lithophane',
-    103: 'idol',
-    2: 'sticker',
-    104: 'datePlank',
-    3: 'document',
-    4: 'pikachu',
-    5: 'vase',
-    6: 'naruto',
-    7: 'namePlate',
-    8: 'controllerStand'
-  };
-  return svgIcons[iconMap[product.id]] || svgIcons.document;
-}
-
 // State
 let activeCategory = 'All';
 let selectedProduct = null;
@@ -390,7 +255,7 @@ function renderProducts() {
     productGrid.innerHTML = filteredProducts.map(product => `
       <div class="product-card" onclick="openModal(${product.id})">
         <div class="product-image">
-          ${getProductIcon(product)}
+          ${product.imageUrl ? `<img src="${product.imageUrl}" alt="${product.name}" class="product-img">` : '<div class="product-img-placeholder">No Image</div>'}
           ${product.trending ? `
             <div class="trending-badge">
               <svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor">
@@ -440,9 +305,7 @@ function openModal(productId) {
   
   modalBody.innerHTML = `
     <div class="modal-image">
-      <div class="modal-svg">
-        ${getProductIcon(selectedProduct)}
-      </div>
+      ${selectedProduct.imageUrl ? `<img src="${selectedProduct.imageUrl}" alt="${selectedProduct.name}" class="modal-product-img">` : '<div class="modal-img-placeholder">No Image</div>'}
     </div>
     <div class="modal-details">
       <span class="modal-category">${selectedProduct.subCategory}</span>
