@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel - PJA Stick & 3D Studio</title>
+  <link rel="stylesheet" href="admin-styles.css">
+</head>
+<body>
+
+  <!-- Login Screen -->
+  <div id="loginScreen" class="login-screen">
+    <div class="login-container">
+      <div class="login-header">
+        <img src="logo_square.png" alt="PJA Logo" class="login-logo">
+        <h1>Admin Panel</h1>
+        <p>PJA Stick & 3D Studio</p>
+      </div>
+      <form id="loginForm" class="login-form">
+        <div class="form-group">
+          <label for="username">Username</label>
+          <input type="text" id="username" name="username" required autocomplete="username">
+        </div>
+        <div class="form-group">
+          <label for="password">Password</label>
+          <input type="password" id="password" name="password" required autocomplete="current-password">
+        </div>
+        <div id="loginError" class="error-message"></div>
+        <button type="submit" class="btn-primary">Login</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminDashboard" class="admin-dashboard" style="display: none;">
+    
+    <!-- Header -->
+    <header class="admin-header">
+      <div class="header-left">
+        <img src="logo_square.png" alt="PJA Logo" class="header-logo">
+        <div>
+          <h1>Admin Dashboard</h1>
+          <p>Manage your products and content</p>
+        </div>
+      </div>
+      <div class="header-right">
+        <span class="user-name">Welcome, pushkarjay</span>
+        <button id="logoutBtn" class="btn-secondary">Logout</button>
+      </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <div class="admin-nav">
+      <button class="tab-btn active" data-tab="products">Products</button>
+      <button class="tab-btn" data-tab="categories">Categories</button>
+      <button class="tab-btn" data-tab="settings">Settings</button>
+    </div>
+
+    <!-- Products Tab -->
+    <div id="productsTab" class="tab-content active">
+      <div class="content-header">
+        <h2>Product Management</h2>
+        <button id="addProductBtn" class="btn-primary">+ Add New Product</button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="filter-section">
+        <label>Filter by Category:</label>
+        <select id="categoryFilter" class="filter-select">
+          <option value="All">All Categories</option>
+          <option value="3D Print">3D Print</option>
+          <option value="Stickers">Stickers</option>
+          <option value="Printing">Printing</option>
+          <option value="Polaroid">Polaroid</option>
+        </select>
+        <span id="productCount" class="product-count">0 products</span>
+      </div>
+
+      <!-- Products Table -->
+      <div class="table-container">
+        <table class="products-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Name</th>
+              <th>Category</th>
+              <th>Sub-Category</th>
+              <th>Difficulty</th>
+              <th>Price</th>
+              <th>Trending</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productsTableBody">
+            <!-- Products will be loaded here -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Categories Tab -->
+    <div id="categoriesTab" class="tab-content">
+      <div class="content-header">
+        <h2>Category Management</h2>
+        <button id="addCategoryBtn" class="btn-primary">+ Add New Category</button>
+      </div>
+      
+      <div class="categories-grid" id="categoriesGrid">
+        <!-- Categories will be loaded here -->
+      </div>
+    </div>
+
+    <!-- Settings Tab -->
+    <div id="settingsTab" class="tab-content">
+      <div class="content-header">
+        <h2>Website Settings</h2>
+      </div>
+      
+      <div class="settings-section">
+        <h3>Contact Information</h3>
+        <div class="form-group">
+          <label>WhatsApp Number</label>
+          <input type="text" id="whatsappNumber" class="input-field" value="916372362313">
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <textarea id="location" class="input-field" rows="3">Suresh Singh Chowk, Panki Road, Redma, Daltonganj</textarea>
+        </div>
+        <button id="saveSettingsBtn" class="btn-primary">Save Settings</button>
+      </div>
+
+      <div class="settings-section">
+        <h3>Data Management</h3>
+        <button id="exportDataBtn" class="btn-secondary">Export Data</button>
+        <button id="importDataBtn" class="btn-secondary">Import Data</button>
+        <input type="file" id="importFileInput" accept=".json" style="display: none;">
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Product Modal -->
+  <div id="productModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 id="modalTitle">Add New Product</h2>
+        <button class="modal-close" id="closeModal">&times;</button>
+      </div>
+      <form id="productForm" class="product-form">
+        <input type="hidden" id="productId">
+        
+        <div class="form-row">
+          <div class="form-group">
+            <label>Product Name *</label>
+            <input type="text" id="productName" required class="input-field">
+          </div>
+          <div class="form-group">
+            <label>Category *</label>
+            <select id="productCategory" required class="input-field">
+              <option value="">Select Category</option>
+              <option value="3D Print">3D Print</option>
+              <option value="Stickers">Stickers</option>
+              <option value="Printing">Printing</option>
+              <option value="Polaroid">Polaroid</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Sub-Category</label>
+            <input type="text" id="productSubCategory" class="input-field" placeholder="e.g., Trending, Anime, Documents">
+          </div>
+          <div class="form-group">
+            <label>Difficulty *</label>
+            <select id="productDifficulty" required class="input-field">
+              <option value="Easy">Easy</option>
+              <option value="Moderate">Moderate</option>
+              <option value="Complex">Complex</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Time Required</label>
+            <input type="text" id="productTime" class="input-field" placeholder="e.g., 2-3 Hours, Instant">
+          </div>
+          <div class="form-group">
+            <label>Material</label>
+            <input type="text" id="productMaterial" class="input-field" placeholder="e.g., PLA, Vinyl">
+          </div>
+        </div>
+
+        <div class="form-row">
+          <div class="form-group">
+            <label>Price</label>
+            <input type="text" id="productPrice" class="input-field" placeholder="e.g., Low, Medium, High, Custom">
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label>Image URL</label>
+          <input type="url" id="productImageUrl" class="input-field" placeholder="https://example.com/image.jpg or relative path like images/product.jpg">
+          <small style="color: #64748b; font-size: 0.875rem;">Enter the URL or path to your product image</small>
+        </div>
+
+        <div class="form-group">
+          <label>Description *</label>
+          <textarea id="productDescription" required class="input-field" rows="4" placeholder="Describe your product..."></textarea>
+        </div>
+
+        <div class="form-group">
+          <label class="checkbox-label">
+            <input type="checkbox" id="productTrending">
+            <span>Mark as Trending (Hot)</span>
+          </label>
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelModal">Cancel</button>
+          <button type="submit" class="btn-primary">Save Product</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Category Modal -->
+  <div id="categoryModal" class="modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2>Add New Category</h2>
+        <button class="modal-close" id="closeCategoryModal">&times;</button>
+      </div>
+      <form id="categoryForm">
+        <div class="form-group">
+          <label>Category Name</label>
+          <input type="text" id="categoryName" required class="input-field">
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn-secondary" id="cancelCategoryModal">Cancel</button>
+          <button type="submit" class="btn-primary">Add Category</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification -->
+  <div id="toast" class="toast"></div>
+
+  <script src="admin-script.js"></script>
+</body>
+</html>

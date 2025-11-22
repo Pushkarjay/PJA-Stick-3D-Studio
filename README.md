@@ -1,25 +1,116 @@
-# PJA Stick & 3D Studio
+# PJA Stick & 3D Studio - E-Commerce Platform
 
-Your creative hub in Daltonganj for 3D printed gifts, custom stickers, and professional printing services.
+<div align="center">
 
-## 🚀 Live Demo
+![PJA Logo](logo_square.png)
 
-Visit the site: [https://pushkarjay.github.io/PJA-Stick-3D-Studio/](https://pushkarjay.github.io/PJA-Stick-3D-Studio/)
+**🚀 Full-Stack E-Commerce Platform for 3D Prints, Stickers & Printing Services**
 
-## 📋 Features
+[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
+[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
+[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
+[![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com)
 
-- **3D Printing Services**: Flip Names, Moon Lamps, Divine Idols, and custom 3D prints
-- **Custom Stickers**: Waterproof laptop skins, mobile skins, and anime decals
-- **Professional Printing**: Document printing, project reports (B/W & Color)
-- **Responsive Design**: Works perfectly on mobile, tablet, and desktop
-- **WhatsApp Integration**: Direct ordering through WhatsApp
+[🌐 Live Demo](https://pja3d-fire.web.app) | [📖 API Docs](#api-documentation) | [🔧 Setup Guide](#setup--installation)
 
-## 🛠️ Technology Stack
+</div>
 
-- **HTML5**: Clean semantic markup
-- **CSS3**: Modern styling with animations and responsive design
-- **Vanilla JavaScript**: No frameworks, pure JavaScript for interactivity
-- **GitHub Pages Ready**: Zero-cost hosting solution
+---
+
+## 📋 Table of Contents
+- [Overview](#overview)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Architecture](#architecture)
+- [Setup & Installation](#setup--installation)
+- [Google Cloud Services](#google-cloud-services-needed)
+- [API Documentation](#api-documentation)
+- [Deployment](#deployment)
+
+---
+
+## 🎯 Overview
+
+PJA Stick & 3D Studio is a modern, full-stack e-commerce platform designed for selling 3D printed products, custom stickers, and professional printing services in Daltonganj. Built with Firebase backend, Express.js REST API, and deployed on Google Cloud Platform.
+
+### Business Model
+- **3D Printing**: Custom flip names, moon lamps, divine idols, lithophane frames
+- **Stickers**: Waterproof laptop skins, mobile skins, anime decals
+- **Printing**: Document printing, project reports (B/W & Color)
+
+---
+
+## ✨ Features
+
+### Customer Features
+- ✅ User authentication (Email/Password, Google Sign-In)
+- 🛒 Shopping cart with real-time sync
+- 💳 Secure payment integration (Razorpay)
+- 📦 Order tracking with status updates
+- ⭐ Product reviews and ratings
+- 🔍 Advanced search and filters
+- 📱 Mobile-responsive PWA
+- 💌 Email and WhatsApp notifications
+
+### Admin Features
+- 📊 Comprehensive dashboard with analytics
+- 🎨 Product management (CRUD operations)
+- 📦 Order processing and fulfillment
+- 👥 User management
+- 📈 Sales reports and insights
+- 🖼️ Image upload with optimization
+- 📋 Bulk product import
+
+### Technical Features
+- 🔐 JWT-based authentication
+- 🛡️ Role-based access control (RBAC)
+- 🚀 RESTful API architecture
+- 📦 Firebase Firestore database
+- 🖼️ Firebase Storage for images
+- 🔄 Real-time data synchronization
+- 📧 Automated email notifications
+- 🧪 Comprehensive error handling
+- 📝 Request logging and monitoring
+
+---
+
+## 🛠️ Tech Stack
+
+### Frontend
+```javascript
+{
+  "core": "HTML5, CSS3, JavaScript ES6+",
+  "styling": "Custom CSS with CSS Grid & Flexbox",
+  "state": "localStorage + Fetch API",
+  "icons": "SVG",
+  "future": "React.js migration planned"
+}
+```
+
+### Backend
+```javascript
+{
+  "runtime": "Node.js v18+",
+  "framework": "Express.js v4.x",
+  "authentication": "Firebase Auth + JWT",
+  "database": "Firebase Firestore",
+  "storage": "Firebase Storage",
+  "payments": "Razorpay",
+  "email": "Nodemailer + SMTP"
+}
+```
+
+### Infrastructure
+```javascript
+{
+  "hosting": "Firebase Hosting",
+  "backend": "Google Cloud Run",
+  "database": "Firebase Firestore",
+  "storage": "Firebase Storage",
+  "cdn": "Firebase CDN",
+  "ci-cd": "GitHub Actions",
+  "monitoring": "Google Cloud Monitoring"
+}
 
 ## 📁 Project Structure
 
