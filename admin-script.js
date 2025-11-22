@@ -1,19 +1,9 @@
-// Authentication - Using hashed credentials
-// Original: username: 'pushkarjay', password: 'kiitprint'
-// SHA-256 hashes generated for security
+// Authentication - Hardcoded for prototype
+// TODO: Implement proper authentication for production
 const ADMIN_CREDENTIALS = {
-  usernameHash: '5d9c68c6c50ed3d02a2fcf54f63993b6868f48a1f2c7b8e3a6d8f7e9a4b2c5d3', // SHA-256 of 'pushkarjay'
-  passwordHash: '4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce' // SHA-256 of 'kiitprint'
+  username: 'pushkarjay',
+  password: 'kiitprint'
 };
-
-// Simple SHA-256 hash function
-async function hashString(str) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
 
 // Check if user is logged in
 function checkAuth() {
@@ -41,18 +31,13 @@ function showDashboard() {
 }
 
 // Login form handler
-document.getElementById('loginForm').addEventListener('submit', async function(e) {
+document.getElementById('loginForm').addEventListener('submit', function(e) {
   e.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const errorDiv = document.getElementById('loginError');
 
-  // Hash the input credentials
-  const usernameHash = await hashString(username);
-  const passwordHash = await hashString(password);
-
-  if (usernameHash === ADMIN_CREDENTIALS.usernameHash && 
-      passwordHash === ADMIN_CREDENTIALS.passwordHash) {
+  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
     sessionStorage.setItem('adminLoggedIn', 'true');
     sessionStorage.setItem('adminUser', username);
     showDashboard();
