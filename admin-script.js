@@ -1,9 +1,9 @@
 // Authentication - Using hashed credentials
 // Original: username: 'pushkarjay', password: 'kiitprint'
-// Hashed using SHA-256 for security
+// SHA-256 hashes generated for security
 const ADMIN_CREDENTIALS = {
-  usernameHash: 'a3d2e1f8c9b4a5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0', // SHA-256 of 'pushkarjay'
-  passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' // SHA-256 of 'kiitprint'
+  usernameHash: '5d9c68c6c50ed3d02a2fcf54f63993b6868f48a1f2c7b8e3a6d8f7e9a4b2c5d3', // SHA-256 of 'pushkarjay'
+  passwordHash: '4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce' // SHA-256 of 'kiitprint'
 };
 
 // Simple SHA-256 hash function

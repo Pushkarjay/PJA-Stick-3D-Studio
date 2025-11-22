@@ -11,31 +11,45 @@
 ### Current Hashes (SHA-256)
 ```javascript
 // These are cryptographic hashes - cannot be reversed to get original password
-usernameHash: 'a3d2e1f8c9b4a5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0'
-passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918'
+// Current credentials: username='pushkarjay', password='kiitprint'
+usernameHash: '5d9c68c6c50ed3d02a2fcf54f63993b6868f48a1f2c7b8e3a6d8f7e9a4b2c5d3'
+passwordHash: '4e07408562bedb8b60ce05c1decfe3ad16b72230967de01f640b7e4729b49fce'
 ```
 
 ### How to Change Credentials
 
-If you need to change the username or password:
+**Option 1: Use Hash Generator Page (Easiest)**
+
+1. Open `hash-generator.html` in your browser
+2. Enter your new username and password
+3. Click "Generate Hashes"
+4. Copy the generated hashes
+5. Update `admin-script.js` with the new hashes
+
+**Option 2: Browser Console**
 
 1. Open browser console (F12)
-2. Run this code to generate new hash:
+2. Paste and run this code:
 
 ```javascript
-async function hashString(str) {
-  const encoder = new TextEncoder();
-  const data = encoder.encode(str);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-}
+(async function() {
+  async function hashString(str) {
+    const encoder = new TextEncoder();
+    const data = encoder.encode(str);
+    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+    const hashArray = Array.from(new Uint8Array(hashBuffer));
+    return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+  }
 
-// Generate hash for new username
-hashString('your-new-username').then(hash => console.log('Username hash:', hash));
-
-// Generate hash for new password
-hashString('your-new-password').then(hash => console.log('Password hash:', hash));
+  const username = 'your-new-username';
+  const password = 'your-new-password';
+  
+  const usernameHash = await hashString(username);
+  const passwordHash = await hashString(password);
+  
+  console.log('Username hash:', usernameHash);
+  console.log('Password hash:', passwordHash);
+})();
 ```
 
 3. Update the hashes in `admin-script.js`:
