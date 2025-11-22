@@ -1,5 +1,14 @@
-// Products Data
-const products = [
+// Load products from localStorage if available (updated by admin), otherwise use default
+function loadProductsData() {
+  const savedProducts = localStorage.getItem('pjaProductsPublic');
+  if (savedProducts) {
+    return JSON.parse(savedProducts);
+  }
+  return defaultProducts;
+}
+
+// Default Products Data
+const defaultProducts = [
   {
     id: 101,
     name: "3D Flip Name Illusion",
@@ -135,6 +144,9 @@ const products = [
     price: "Medium"
   }
 ];
+
+// Load products (from admin updates or defaults)
+let products = loadProductsData();
 
 // SVG Icons
 const svgIcons = {
@@ -277,8 +289,18 @@ let selectedProduct = null;
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function() {
+  // Reload products from localStorage if updated
+  products = loadProductsData();
   renderProducts();
   setupEventListeners();
+});
+
+// Reload products when page gets focus (in case admin updated them)
+window.addEventListener('storage', function(e) {
+  if (e.key === 'pjaProductsPublic') {
+    products = loadProductsData();
+    renderProducts();
+  }
 });
 
 // Setup Event Listeners
