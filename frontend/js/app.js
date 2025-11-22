@@ -28,8 +28,9 @@ async function loadProducts() {
     const response = await fetch(`${API_BASE_URL}/products`);
     if (!response.ok) throw new Error('Failed to load products');
     
-    const data = await response.json();
-    products = data.data || [];
+    const result = await response.json();
+    // API returns: {success: true, data: {products: [...], pagination: {...}}}
+    products = result.data?.products || result.data || [];
     localStorage.setItem('pjaCachedProducts', JSON.stringify(products));
     
     hideLoadingSkeletons();
