@@ -204,16 +204,16 @@ async function loadProducts(filterCategory = 'All') {
   
   tbody.innerHTML = filteredProducts.map(product => `
     <tr>
-      <td>${product.id}</td>
-      <td><strong>${product.name}</strong></td>
-      <td>${product.category}</td>
+      <td>${product.id || '-'}</td>
+      <td><strong>${product.name || 'Unnamed Product'}</strong></td>
+      <td>${product.category || '-'}</td>
       <td>${product.subCategory || '-'}</td>
-      <td><span class="badge badge-${product.difficulty.toLowerCase()}">${product.difficulty}</span></td>
-      <td>${product.price}</td>
-      <td>${product.trending ? '<span class="badge badge-trending">🔥 Hot</span>' : '-'}</td>
+      <td><span class="badge badge-${(product.difficulty || 'easy').toLowerCase()}">${product.difficulty || 'N/A'}</span></td>
+      <td>${product.price || product.salePrice ? '₹' + (product.salePrice || product.price) : '-'}</td>
+      <td>${product.trending || product.featured ? '<span class="badge badge-trending">🔥 Hot</span>' : '-'}</td>
       <td>
-        <button class="action-btn edit" onclick="editProduct(${product.id})">Edit</button>
-        <button class="action-btn delete" onclick="deleteProduct(${product.id})">Delete</button>
+        <button class="action-btn edit" onclick="editProduct('${product.id}')">Edit</button>
+        <button class="action-btn delete" onclick="deleteProduct('${product.id}')">Delete</button>
       </td>
     </tr>
   `).join('');
