@@ -18,7 +18,7 @@ function errorHandler(err, req, res, next) {
   let code = err.code || 'INTERNAL_ERROR';
 
   // Firebase errors
-  if (err.code?.startsWith('auth/')) {
+  if (typeof err.code === 'string' && err.code.startsWith('auth/')) {
     statusCode = 401;
     message = getFirebaseErrorMessage(err.code);
     code = 'AUTH_ERROR';

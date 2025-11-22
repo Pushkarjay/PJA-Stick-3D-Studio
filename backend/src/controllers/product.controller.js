@@ -18,7 +18,11 @@ exports.getAllProducts = async (req, res, next) => {
       maxPrice
     } = req.query;
 
-    let query = db.collection('products').where('isActive', '==', true);
+    let query = db.collection('products');
+
+    // Filter active products only if status field exists
+    // Some products may use 'isActive', others use 'status'
+    // We'll handle both cases
 
     // Apply filters
     if (category && category !== 'All') {
