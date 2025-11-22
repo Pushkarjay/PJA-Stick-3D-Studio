@@ -35,6 +35,28 @@ function showDashboard() {
   loadSettings();
 }
 
+// Toggle password visibility
+const togglePassword = document.getElementById('togglePassword');
+const passwordInput = document.getElementById('password');
+const eyeIcon = document.getElementById('eyeIcon');
+const eyeOffIcon = document.getElementById('eyeOffIcon');
+
+if (togglePassword) {
+  togglePassword.addEventListener('click', function() {
+    const type = passwordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+    passwordInput.setAttribute('type', type);
+    
+    // Toggle icons
+    if (type === 'text') {
+      eyeIcon.style.display = 'none';
+      eyeOffIcon.style.display = 'block';
+    } else {
+      eyeIcon.style.display = 'block';
+      eyeOffIcon.style.display = 'none';
+    }
+  });
+}
+
 // Login form handler
 document.getElementById('loginForm').addEventListener('submit', function(e) {
   e.preventDefault();
