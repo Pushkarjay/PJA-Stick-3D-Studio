@@ -1,7 +1,7 @@
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000/api'
-  : 'https://pja3d-backend-369377967204.asia-south1.run.app/api';
+  : 'https://pja3d-backend-upwmdmk6tq-el.a.run.app/api';
 
 // Authentication - Hardcoded for prototype
 // TODO: Implement proper authentication for production
