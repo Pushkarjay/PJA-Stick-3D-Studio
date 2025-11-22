@@ -21,6 +21,11 @@ const upload = multer({
   }
 });
 
+// Handle OPTIONS preflight
+router.options('/product', (req, res) => {
+  res.status(200).end();
+});
+
 // Upload product image (auth temporarily disabled for testing)
 router.post('/product', upload.single('image'), uploadProductImage);
 

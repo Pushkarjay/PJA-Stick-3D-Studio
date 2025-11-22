@@ -30,12 +30,12 @@ initializeFirebase();
 // Trust proxy (required for Cloud Run)
 app.set('trust proxy', 1);
 
-// CORS - Must be before other middleware
+// CORS - Must be before other middleware (temporarily allow all for testing)
 app.use(cors({
-  origin: ['https://pja3d-fire.web.app', 'https://pja3d-fire.firebaseapp.com', 'http://localhost:3000', 'http://localhost:5000'],
+  origin: true,
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
   exposedHeaders: ['Content-Length', 'Content-Type']
 }));
 
