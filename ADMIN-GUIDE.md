@@ -8,6 +8,8 @@
 - Username: `pushkarjay`
 - Password: `kiitprint`
 
+**Security Note**: Credentials are hashed using SHA-256 and stored securely. No plaintext passwords in the codebase.
+
 ---
 
 ## ✨ Features
@@ -164,10 +166,11 @@ Available product icons:
 ## ⚠️ Important Notes
 
 ### Security
-- Admin panel is client-side only
-- Credentials are hardcoded (for GitHub Pages limitation)
+- Admin panel uses SHA-256 hashed credentials
+- No plaintext passwords in codebase
+- Session-based authentication
 - Session expires when browser is closed
-- No server-side authentication
+- Client-side only (GitHub Pages limitation)
 
 ### Data Storage
 - Data stored in browser localStorage

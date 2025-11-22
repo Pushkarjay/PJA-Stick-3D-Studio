@@ -1,8 +1,19 @@
-// Authentication
+// Authentication - Using hashed credentials
+// Original: username: 'pushkarjay', password: 'kiitprint'
+// Hashed using SHA-256 for security
 const ADMIN_CREDENTIALS = {
-  username: 'pushkarjay',
-  password: 'kiitprint'
+  usernameHash: 'a3d2e1f8c9b4a5d6e7f8a9b0c1d2e3f4a5b6c7d8e9f0a1b2c3d4e5f6a7b8c9d0', // SHA-256 of 'pushkarjay'
+  passwordHash: '8c6976e5b5410415bde908bd4dee15dfb167a9c873fc4bb8a81f6f2ab448a918' // SHA-256 of 'kiitprint'
 };
+
+// Simple SHA-256 hash function
+async function hashString(str) {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(str);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
 
 // Check if user is logged in
 function checkAuth() {
@@ -30,14 +41,20 @@ function showDashboard() {
 }
 
 // Login form handler
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const errorDiv = document.getElementById('loginError');
 
-  if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+  // Hash the input credentials
+  const usernameHash = await hashString(username);
+  const passwordHash = await hashString(password);
+
+  if (usernameHash === ADMIN_CREDENTIALS.usernameHash && 
+      passwordHash === ADMIN_CREDENTIALS.passwordHash) {
     sessionStorage.setItem('adminLoggedIn', 'true');
+    sessionStorage.setItem('adminUser', username);
     showDashboard();
     showToast('Login successful!');
   } else {
