@@ -200,9 +200,37 @@
         </div>
 
         <div class="form-group">
-          <label>Image URL</label>
-          <input type="url" id="productImageUrl" class="input-field" placeholder="https://example.com/image.jpg or relative path like images/product.jpg">
-          <small style="color: #64748b; font-size: 0.875rem;">Enter the URL or path to your product image</small>
+          <label>Product Image</label>
+          <div class="image-upload-container">
+            <div class="image-preview" id="imagePreview">
+              <img id="previewImg" src="" alt="Preview" style="display: none;">
+              <div class="upload-placeholder" id="uploadPlaceholder">
+                <svg width="48" height="48" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v18m0 0l-6-6m6 6l6-6M6 21h12m12 0h-6"/>
+                  <circle cx="24" cy="24" r="22"/>
+                </svg>
+                <p>Click to upload or drag & drop</p>
+                <span>PNG, JPG, WebP up to 5MB</span>
+              </div>
+            </div>
+            <input type="file" id="productImageFile" accept="image/*" style="display: none;">
+            <input type="hidden" id="productImageUrl">
+            <div class="image-upload-actions">
+              <button type="button" class="btn-secondary btn-small" id="uploadImageBtn">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 2v12m0 0l-4-4m4 4l4-4"/>
+                </svg>
+                Choose File
+              </button>
+              <button type="button" class="btn-secondary btn-small" id="removeImageBtn" style="display: none;">
+                <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M3 6h12M5 6V4a1 1 0 011-1h6a1 1 0 011 1v2m2 0v12a1 1 0 01-1 1H5a1 1 0 01-1-1V6h12z"/>
+                </svg>
+                Remove
+              </button>
+              <span id="uploadProgress" class="upload-progress"></span>
+            </div>
+          </div>
         </div>
 
         <div class="form-group">

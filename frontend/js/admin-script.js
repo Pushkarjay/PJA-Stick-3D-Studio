@@ -236,6 +236,7 @@ async function openProductModal(productId = null) {
   const title = document.getElementById('modalTitle');
   
   form.reset();
+  resetImageUpload();
   
   if (productId) {
     title.textContent = 'Edit Product';
@@ -254,6 +255,11 @@ async function openProductModal(productId = null) {
       document.getElementById('productDescription').value = product.description;
       document.getElementById('productTrending').checked = product.trending || false;
       document.getElementById('productImageUrl').value = product.imageUrl || '';
+      
+      // Show existing image if available
+      if (product.imageUrl) {
+        showImagePreview(product.imageUrl);
+      }
     }
   } else {
     title.textContent = 'Add New Product';
@@ -262,6 +268,162 @@ async function openProductModal(productId = null) {
   
   modal.classList.add('open');
 }
+
+// Image Upload Functionality
+function setupImageUpload() {
+  const uploadBtn = document.getElementById('uploadImageBtn');
+  const fileInput = document.getElementById('productImageFile');
+  const removeBtn = document.getElementById('removeImageBtn');
+  const imagePreview = document.getElementById('imagePreview');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  
+  // Click to upload
+  uploadBtn.addEventListener('click', () => {
+    fileInput.click();
+  });
+  
+  // Click placeholder to upload
+  uploadPlaceholder.addEventListener('click', () => {
+    fileInput.click();
+  });
+  
+  // Handle file selection
+  fileInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      await uploadImage(file);
+    }
+  });
+  
+  // Remove image
+  removeBtn.addEventListener('click', () => {
+    resetImageUpload();
+  });
+  
+  // Drag and drop
+  imagePreview.addEventListener('dragover', (e) => {
+    e.preventDefault();
+    imagePreview.style.borderColor = '#0f172a';
+  });
+  
+  imagePreview.addEventListener('dragleave', (e) => {
+    e.preventDefault();
+    imagePreview.style.borderColor = '#cbd5e1';
+  });
+  
+  imagePreview.addEventListener('drop', async (e) => {
+    e.preventDefault();
+    imagePreview.style.borderColor = '#cbd5e1';
+    
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) {
+      await uploadImage(file);
+    } else {
+      showToast('Please drop an image file', 'error');
+    }
+  });
+}
+
+async function uploadImage(file) {
+  // Validate file size (5MB)
+  if (file.size > 5 * 1024 * 1024) {
+    showToast('Image size must be less than 5MB', 'error');
+    return;
+  }
+  
+  // Validate file type
+  if (!file.type.startsWith('image/')) {
+    showToast('Please select an image file', 'error');
+    return;
+  }
+  
+  const progressSpan = document.getElementById('uploadProgress');
+  progressSpan.textContent = 'Uploading...';
+  progressSpan.className = 'upload-progress uploading';
+  
+  try {
+    // Create FormData
+    const formData = new FormData();
+    formData.append('image', file);
+    
+    // Upload to backend
+    const response = await fetch(`${API_BASE_URL}/upload/product`, {
+      method: 'POST',
+      body: formData,
+      // Add auth token if needed
+      headers: {
+        // 'Authorization': 'Bearer ' + sessionStorage.getItem('adminToken')
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Upload failed');
+    }
+    
+    const result = await response.json();
+    
+    if (result.success && result.data.url) {
+      // Set the image URL in hidden input
+      document.getElementById('productImageUrl').value = result.data.url;
+      
+      // Show preview
+      showImagePreview(result.data.url);
+      
+      progressSpan.textContent = '✓ Uploaded';
+      progressSpan.className = 'upload-progress success';
+      
+      setTimeout(() => {
+        progressSpan.textContent = '';
+        progressSpan.className = 'upload-progress';
+      }, 3000);
+      
+      showToast('Image uploaded successfully!');
+    } else {
+      throw new Error('Invalid response from server');
+    }
+  } catch (error) {
+    console.error('Upload error:', error);
+    progressSpan.textContent = '✗ Failed';
+    progressSpan.className = 'upload-progress error';
+    showToast('Failed to upload image: ' + error.message, 'error');
+    
+    setTimeout(() => {
+      progressSpan.textContent = '';
+      progressSpan.className = 'upload-progress';
+    }, 3000);
+  }
+}
+
+function showImagePreview(url) {
+  const previewImg = document.getElementById('previewImg');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  const removeBtn = document.getElementById('removeImageBtn');
+  
+  previewImg.src = url;
+  previewImg.style.display = 'block';
+  uploadPlaceholder.style.display = 'none';
+  removeBtn.style.display = 'inline-flex';
+}
+
+function resetImageUpload() {
+  const previewImg = document.getElementById('previewImg');
+  const uploadPlaceholder = document.getElementById('uploadPlaceholder');
+  const removeBtn = document.getElementById('removeImageBtn');
+  const fileInput = document.getElementById('productImageFile');
+  const progressSpan = document.getElementById('uploadProgress');
+  
+  previewImg.src = '';
+  previewImg.style.display = 'none';
+  uploadPlaceholder.style.display = 'block';
+  removeBtn.style.display = 'none';
+  fileInput.value = '';
+  document.getElementById('productImageUrl').value = '';
+  progressSpan.textContent = '';
+  progressSpan.className = 'upload-progress';
+}
+
+// Initialize image upload on page load
+setupImageUpload();
 
 // Close modal
 document.getElementById('closeModal').addEventListener('click', closeProductModal);
