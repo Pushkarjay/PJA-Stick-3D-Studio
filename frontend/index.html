@@ -29,6 +29,16 @@
         <button class="nav-btn" data-category="Printing">Printing</button>
       </div>
 
+      <div class="nav-actions">
+        <button class="nav-action-btn" id="loginBtn" onclick="showLoginModal()">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          Login
+        </button>
+      </div>
+
       <button class="hamburger" id="hamburger">
         <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <line x1="4" x2="20" y1="12" y2="12"></line>
@@ -43,6 +53,14 @@
       <button class="nav-btn" data-category="3D Print">3D Print</button>
       <button class="nav-btn" data-category="Stickers">Stickers</button>
       <button class="nav-btn" data-category="Printing">Printing</button>
+      <div class="mobile-divider"></div>
+      <button class="nav-btn" onclick="showLoginModal()">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right: 0.5rem;">
+          <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        Login
+      </button>
     </div>
   </nav>
 
@@ -188,6 +206,51 @@
         </svg>
       </button>
       <div class="modal-body" id="modalBody"></div>
+    </div>
+  </div>
+
+  <!-- Login Modal -->
+  <div class="modal-overlay" id="loginModal">
+    <div class="modal-content" style="max-width: 28rem;">
+      <button class="modal-close" onclick="closeLoginModal()">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M18 6 6 18"></path>
+          <path d="m6 6 12 12"></path>
+        </svg>
+      </button>
+      <div class="login-modal-body">
+        <h2 style="font-size: 1.5rem; font-weight: 700; color: #0f172a; margin-bottom: 0.5rem;">Welcome Back</h2>
+        <p style="color: #64748b; margin-bottom: 2rem;">Sign in to your account</p>
+        
+        <div class="login-options">
+          <a href="admin.html" class="login-option-btn admin">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+              <path d="M2 17l10 5 10-5"></path>
+              <path d="M2 12l10 5 10-5"></path>
+            </svg>
+            <div>
+              <h3>Admin Login</h3>
+              <p>Manage products, orders & settings</p>
+            </div>
+          </a>
+          
+          <button class="login-option-btn user" onclick="showUserLoginForm()">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <div>
+              <h3>Customer Login</h3>
+              <p>Track orders & save favorites</p>
+            </div>
+          </button>
+          
+          <div style="text-align: center; margin-top: 1.5rem; color: #64748b; font-size: 0.875rem;">
+            Don't have an account? <button onclick="showSignupForm()" style="color: #059669; font-weight: 600; background: none; border: none; cursor: pointer; text-decoration: underline;">Sign Up</button>
+          </div>
+        </div>
+      </div>
     </div>
   </div>
 

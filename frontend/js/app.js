@@ -387,14 +387,15 @@ function renderSocialProofBanner() {
   const bannerContainer = document.getElementById('socialProofBanner');
   if (!bannerContainer) return;
   
+  // Real statistics - update these based on actual business metrics
   const proofItems = [
-    { icon: 'users', text: '5,000+ Happy Customers' },
-    { icon: 'india', text: 'Made in Daltonganj' },
-    { icon: 'clock', text: 'Same Day Delivery' },
+    { icon: 'users', text: 'Trusted by Students & Businesses' },
+    { icon: 'india', text: 'Made in Daltonganj, Jharkhand' },
+    { icon: 'clock', text: 'Same Day Service Available' },
     { icon: 'shield', text: 'Quality Guaranteed' },
-    { icon: 'users', text: '5,000+ Happy Customers' },
-    { icon: 'india', text: 'Made in Daltonganj' },
-    { icon: 'clock', text: 'Same Day Delivery' },
+    { icon: 'users', text: 'Trusted by Students & Businesses' },
+    { icon: 'india', text: 'Made in Daltonganj, Jharkhand' },
+    { icon: 'clock', text: 'Same Day Service Available' },
     { icon: 'shield', text: 'Quality Guaranteed' }
   ];
   
@@ -423,34 +424,24 @@ function getSocialProofIcon(type) {
   return icons[type] || icons.users;
 }
 
-// Testimonials
-function renderTestimonials() {
+// Testimonials - Load from backend or hide if none available
+async function renderTestimonials() {
   const testimonialsContainer = document.getElementById('testimonials');
   if (!testimonialsContainer) return;
   
-  const testimonials = [
-    {
-      name: "Rahul Kumar",
-      role: "College Student",
-      avatar: "RK",
-      rating: 5,
-      text: "Got my flip name printed and it's absolutely amazing! The quality is top-notch and the team was very helpful."
-    },
-    {
-      name: "Priya Singh",
-      role: "Teacher",
-      avatar: "PS",
-      rating: 5,
-      text: "Best printing shop in Daltonganj! Fast service, great prices, and excellent quality. Highly recommended!"
-    },
-    {
-      name: "Amit Sharma",
-      role: "Business Owner",
-      avatar: "AS",
-      rating: 5,
-      text: "The laptop skins are amazing! Waterproof and looks premium. Got anime stickers too, love them all!"
-    }
-  ];
+  // TODO: Fetch testimonials from backend API
+  // For now, hide the testimonials section until real data is available
+  const testimonialsSection = testimonialsContainer.closest('.testimonials-container');
+  if (testimonialsSection) {
+    testimonialsSection.style.display = 'none';
+  }
+  return;
+  
+  // When backend is ready, use this:
+  // const response = await fetch(`${API_BASE_URL}/testimonials`);
+  // const testimonials = await response.json();
+  
+  const testimonials = [];
   
   const html = `
     <div class="section-header" style="text-align: center; margin-bottom: 2rem;">
@@ -624,6 +615,27 @@ function openProductModal(productId) {
 function closeModal() {
   const modal = document.getElementById('modalOverlay');
   if (modal) modal.classList.remove('open');
+}
+
+// Login Modal Functions
+function showLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (modal) modal.classList.add('open');
+}
+
+function closeLoginModal() {
+  const modal = document.getElementById('loginModal');
+  if (modal) modal.classList.remove('open');
+}
+
+function showUserLoginForm() {
+  showToast('Customer login coming soon!', 'info');
+  // TODO: Implement user login form
+}
+
+function showSignupForm() {
+  showToast('Signup feature coming soon!', 'info');
+  // TODO: Implement signup form
 }
 
 // Event Listeners Setup
