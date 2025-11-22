@@ -1,8 +1,13 @@
+// API Configuration
+const API_BASE_URL = window.location.hostname === 'localhost' 
+  ? 'http://localhost:5000/api'
+  : '/api';
+
 // Authentication - Hardcoded for prototype
 // TODO: Implement proper authentication for production
 const ADMIN_CREDENTIALS = {
   username: 'pushkarjay',
-  password: 'kiitprint'
+  password: 'pja3d@admin2025'
 };
 
 // Check if user is logged in
@@ -74,174 +79,104 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
   });
 });
 
-// Initialize products from script.js data or localStorage
-function initializeProducts() {
-  const savedProducts = localStorage.getItem('pjaProducts');
-  if (!savedProducts) {
-    // Default products from script.js
-    const defaultProducts = [
-      {
-        id: 101,
-        name: "3D Flip Name Illusion",
-        category: "3D Print",
-        subCategory: "Trending",
-        difficulty: "Complex",
-        time: "5-7 Hours",
-        material: "PLA (Dual Color)",
-        description: "The viral 3D gift! Shows one name from the left and another from the right. Perfect for couples.",
-        price: "Medium",
-        trending: true,
-        imageUrl: ""
-      },
-      {
-        id: 102,
-        name: "Moon Lamp (Custom)",
-        category: "3D Print",
-        subCategory: "Decor",
-        difficulty: "Complex",
-        time: "12+ Hours",
-        material: "White PLA",
-        description: "A textured moon that glows. Can include a hidden photo (lithophane) or text on the surface.",
-        price: "High",
-        trending: true,
-        imageUrl: ""
-      },
-      {
-        id: 1,
-        name: "Custom Lithophane Frame",
-        category: "3D Print",
-        subCategory: "Sentimental",
-        difficulty: "Moderate",
-        time: "4-6 Hours",
-        material: "White PLA",
-        description: "Turn your favorite memory into a glowing masterpiece. Looks like a relief carving until backlit.",
-        price: "Custom",
-        imageUrl: ""
-      },
-      {
-        id: 103,
-        name: "Divine 3D Idol (Gold)",
-        category: "3D Print",
-        subCategory: "Spiritual",
-        difficulty: "Moderate",
-        time: "6-8 Hours",
-        material: "Silk Gold PLA",
-        description: "Premium finished idols for home mandirs or car dashboards. Inspired by the 'Divine Collection'.",
-        price: "Medium",
-        imageUrl: ""
-      },
-      {
-        id: 2,
-        name: "Laptop Skin / Decals",
-        category: "Stickers",
-        subCategory: "Stickers",
-        difficulty: "Easy",
-        time: "Instant",
-        material: "Vinyl (Waterproof)",
-        description: "Premium waterproof skins for laptops and mobiles. Anime, Devotional, or Custom designs available.",
-        price: "Low",
-        imageUrl: ""
-      },
-      {
-        id: 104,
-        name: "Couple Date Plank",
-        category: "3D Print",
-        subCategory: "Sentimental",
-        difficulty: "Easy",
-        time: "2-3 Hours",
-        material: "PLA (Red/White)",
-        description: "Minimalist text stand showing your special date and names. Great budget anniversary gift.",
-        price: "Low",
-        imageUrl: ""
-      },
-      {
-        id: 3,
-        name: "Project Report Printing",
-        category: "Printing",
-        subCategory: "Documents",
-        difficulty: "Easy",
-        time: "Fast",
-        material: "A4 Bond Paper",
-        description: "High-quality Black & White or Color printing for college assignments, reports, and projects.",
-        price: "Low",
-        imageUrl: ""
-      },
-      {
-        id: 4,
-        name: "Low-Poly Pikachu",
-        category: "3D Print",
-        subCategory: "Anime",
-        difficulty: "Easy",
-        time: "2-3 Hours",
-        material: "Yellow PLA",
-        description: "A cute, geometric style Pikachu perfect for desk setups.",
-        price: "Medium",
-        imageUrl: ""
-      },
-      {
-        id: 5,
-        name: "Spiral Geometric Vase",
-        category: "3D Print",
-        subCategory: "Decor",
-        difficulty: "Easy",
-        time: "3-5 Hours",
-        material: "Silk PLA",
-        description: "Printed in 'Vase Mode' for a seamless, elegant finish.",
-        price: "Medium",
-        imageUrl: ""
-      },
-      {
-        id: 6,
-        name: "Naruto Chibi Figure",
-        category: "3D Print",
-        subCategory: "Anime",
-        difficulty: "Complex",
-        time: "6-8 Hours",
-        material: "Grey PLA",
-        description: "Detailed miniature of Naruto. Great for painting.",
-        price: "High",
-        imageUrl: ""
-      },
-      {
-        id: 7,
-        name: "Custom Name Plate",
-        category: "3D Print",
-        subCategory: "Sentimental",
-        difficulty: "Easy",
-        time: "1-2 Hours",
-        material: "Dual Color PLA",
-        description: "Personalized name tags for desks, doors, or keychains.",
-        price: "Low",
-        imageUrl: ""
-      },
-      {
-        id: 8,
-        name: "Controller Stand",
-        category: "3D Print",
-        subCategory: "Useful",
-        difficulty: "Moderate",
-        time: "4-5 Hours",
-        material: "PLA",
-        description: "Display your Xbox or PS5 controllers in style.",
-        price: "Medium",
-        imageUrl: ""
-      }
-    ];
-    localStorage.setItem('pjaProducts', JSON.stringify(defaultProducts));
+// Initialize products from backend API
+async function initializeProducts() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/products`);
+    if (!response.ok) throw new Error('Failed to load products');
+    
+    const result = await response.json();
+    const products = result.data?.products || result.data || [];
+    
+    localStorage.setItem('pjaProducts', JSON.stringify(products));
+    return products;
+  } catch (error) {
+    console.error('Error loading products:', error);
+    
+    // Fallback to localStorage
+    const savedProducts = localStorage.getItem('pjaProducts');
+    if (savedProducts) {
+      return JSON.parse(savedProducts);
+    }
+    
+    return [];
   }
 }
 
 // Get products
-function getProducts() {
-  const products = localStorage.getItem('pjaProducts');
-  return products ? JSON.parse(products) : [];
+async function getProducts() {
+  const products = await initializeProducts();
+  return products;
 }
 
-// Save products
+// Save product (TODO: Implement POST/PUT to backend)
+async function saveProduct(productData) {
+  console.warn('Product save to backend not fully implemented yet. Saving to localStorage.');
+  
+  // TODO: Uncomment when backend endpoints are ready
+  /*
+  try {
+    const method = productData.id ? 'PUT' : 'POST';
+    const endpoint = productData.id 
+      ? `${API_BASE_URL}/products/${productData.id}` 
+      : `${API_BASE_URL}/products`;
+    
+    const response = await fetch(endpoint, {
+      method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData)
+    });
+    
+    if (!response.ok) throw new Error('Failed to save product');
+    return await response.json();
+  } catch (error) {
+    console.error('Error saving product:', error);
+    throw error;
+  }
+  */
+  
+  // Temporary localStorage fallback
+  const products = await getProducts();
+  if (productData.id) {
+    const index = products.findIndex(p => p.id === productData.id);
+    if (index !== -1) products[index] = productData;
+  } else {
+    productData.id = `prod_${Date.now()}`;
+    products.push(productData);
+  }
+  localStorage.setItem('pjaProducts', JSON.stringify(products));
+  return productData;
+}
+
+// Delete product (TODO: Implement DELETE to backend)
+async function deleteProductById(productId) {
+  console.warn('Product delete from backend not fully implemented yet. Deleting from localStorage.');
+  
+  // TODO: Uncomment when backend endpoints are ready
+  /*
+  try {
+    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
+      method: 'DELETE'
+    });
+    
+    if (!response.ok) throw new Error('Failed to delete product');
+    return await response.json();
+  } catch (error) {
+    console.error('Error deleting product:', error);
+    throw error;
+  }
+  */
+  
+  // Temporary localStorage fallback
+  const products = await getProducts();
+  const filtered = products.filter(p => p.id !== productId);
+  localStorage.setItem('pjaProducts', JSON.stringify(filtered));
+}
+
+// Save products (DEPRECATED - use saveProduct instead)
 function saveProducts(products) {
   localStorage.setItem('pjaProducts', JSON.stringify(products));
-  // Also update script.js data for the main site
-  updateMainSiteData(products);
+  console.warn('saveProducts() is deprecated. Use saveProduct() for individual products.');
 }
 
 // Update main site data
@@ -251,8 +186,8 @@ function updateMainSiteData(products) {
 }
 
 // Load products
-function loadProducts(filterCategory = 'All') {
-  const products = getProducts();
+async function loadProducts(filterCategory = 'All') {
+  const products = await getProducts();
   const filteredProducts = filterCategory === 'All' 
     ? products 
     : products.filter(p => p.category === filterCategory);
@@ -295,7 +230,7 @@ document.getElementById('addProductBtn').addEventListener('click', function() {
 });
 
 // Open product modal
-function openProductModal(productId = null) {
+async function openProductModal(productId = null) {
   const modal = document.getElementById('productModal');
   const form = document.getElementById('productForm');
   const title = document.getElementById('modalTitle');
@@ -304,7 +239,7 @@ function openProductModal(productId = null) {
   
   if (productId) {
     title.textContent = 'Edit Product';
-    const products = getProducts();
+    const products = await getProducts();
     const product = products.find(p => p.id === productId);
     
     if (product) {
@@ -337,14 +272,13 @@ function closeProductModal() {
 }
 
 // Save product
-document.getElementById('productForm').addEventListener('submit', function(e) {
+document.getElementById('productForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   
   const productId = document.getElementById('productId').value;
-  const products = getProducts();
   
   const productData = {
-    id: productId ? parseInt(productId) : Date.now(),
+    id: productId || null,
     name: document.getElementById('productName').value,
     category: document.getElementById('productCategory').value,
     subCategory: document.getElementById('productSubCategory').value,
@@ -357,22 +291,14 @@ document.getElementById('productForm').addEventListener('submit', function(e) {
     imageUrl: document.getElementById('productImageUrl').value
   };
   
-  if (productId) {
-    // Update existing product
-    const index = products.findIndex(p => p.id === parseInt(productId));
-    if (index !== -1) {
-      products[index] = productData;
-      showToast('Product updated successfully!');
-    }
-  } else {
-    // Add new product
-    products.push(productData);
-    showToast('Product added successfully!');
+  try {
+    await saveProduct(productData);
+    showToast(productId ? 'Product updated successfully!' : 'Product added successfully!');
+    await loadProducts();
+    closeProductModal();
+  } catch (error) {
+    showToast('Error saving product: ' + error.message, 'error');
   }
-  
-  saveProducts(products);
-  loadProducts();
-  closeProductModal();
 });
 
 // Edit product
@@ -381,19 +307,21 @@ function editProduct(productId) {
 }
 
 // Delete product
-function deleteProduct(productId) {
+async function deleteProduct(productId) {
   if (confirm('Are you sure you want to delete this product?')) {
-    const products = getProducts();
-    const filteredProducts = products.filter(p => p.id !== productId);
-    saveProducts(filteredProducts);
-    loadProducts();
-    showToast('Product deleted successfully!');
+    try {
+      await deleteProductById(productId);
+      await loadProducts();
+      showToast('Product deleted successfully!');
+    } catch (error) {
+      showToast('Error deleting product: ' + error.message, 'error');
+    }
   }
 }
 
 // Load categories
-function loadCategories() {
-  const products = getProducts();
+async function loadCategories() {
+  const products = await getProducts();
   const categories = [...new Set(products.map(p => p.category))];
   
   const grid = document.getElementById('categoriesGrid');
