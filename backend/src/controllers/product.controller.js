@@ -1,4 +1,4 @@
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -7,7 +7,6 @@ const { logger } = require('../utils/logger');
  */
 exports.getAllProducts = async (req, res, next) => {
   try {
-    const db = getFirestore();
     const {
       page = 1,
       limit = 12,
@@ -85,7 +84,6 @@ exports.getAllProducts = async (req, res, next) => {
 exports.getProductById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const db = getFirestore();
 
     const doc = await db.collection('products').doc(id).get();
 
@@ -116,7 +114,6 @@ exports.getProductById = async (req, res, next) => {
 exports.getProductsByCategory = async (req, res, next) => {
   try {
     const { category } = req.params;
-    const db = getFirestore();
 
     const snapshot = await db.collection('products')
       .where('category', '==', category)
@@ -152,7 +149,6 @@ exports.searchProducts = async (req, res, next) => {
       throw new AppError('Search query too short', 400, 'INVALID_QUERY');
     }
 
-    const db = getFirestore();
     const searchTerm = q.toLowerCase();
 
     // Simple search - in production, use Algolia or ElasticSearch

@@ -1,7 +1,7 @@
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
-const { getAuth, getFirestore } = require('../config/firebase');
+const { admin, db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -24,11 +24,9 @@ exports.register = async (req, res, next) => {
     }
 
     const { email, password, displayName, phoneNumber } = req.body;
-    const auth = getAuth();
-    const db = getFirestore();
 
     // Create Firebase user
-    const userRecord = await auth.createUser({
+    const userRecord = await admin.auth().createUser({
       email,
       password,
       displayName,
@@ -93,11 +91,9 @@ exports.login = async (req, res, next) => {
     }
 
     const { email, password } = req.body;
-    const auth = getAuth();
-    const db = getFirestore();
 
     // Get user by email
-    const userRecord = await auth.getUserByEmail(email);
+    const userRecord = await admin.auth().getUserByEmail(email);
     
     // Get user profile from Firestore
     const userDoc = await db.collection('users').doc(userRecord.uid).get();
@@ -193,10 +189,9 @@ exports.refreshToken = async (req, res, next) => {
 exports.forgotPassword = async (req, res, next) => {
   try {
     const { email } = req.body;
-    const auth = getAuth();
 
     // Generate password reset link
-    const resetLink = await auth.generatePasswordResetLink(email);
+    const resetLink = await admin.auth().generatePasswordResetLink(email);
 
     // TODO: Send email with reset link
 
@@ -218,7 +213,6 @@ exports.forgotPassword = async (req, res, next) => {
 exports.resetPassword = async (req, res, next) => {
   try {
     const { token, newPassword } = req.body;
-    const auth = getAuth();
 
     // Verify and apply password reset
     // This would typically be done through Firebase client SDK
@@ -239,7 +233,6 @@ exports.resetPassword = async (req, res, next) => {
 exports.verifyEmail = async (req, res, next) => {
   try {
     const { token } = req.query;
-    const auth = getAuth();
 
     // Verify email token
     // This would typically be done through Firebase client SDK

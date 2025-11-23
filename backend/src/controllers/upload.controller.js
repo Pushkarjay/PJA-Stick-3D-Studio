@@ -1,4 +1,4 @@
-const { getStorage } = require('../config/firebase');
+const { admin } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 const path = require('path');
@@ -12,7 +12,7 @@ exports.uploadProductImage = async (req, res, next) => {
       throw new AppError('No file uploaded', 400, 'NO_FILE');
     }
 
-    const bucket = getStorage();
+    const bucket = admin.storage().bucket();
     const timestamp = Date.now();
     const filename = `products/${timestamp}_${req.file.originalname}`;
     const file = bucket.file(filename);
@@ -72,7 +72,7 @@ exports.uploadProductImage = async (req, res, next) => {
 exports.deleteProductImage = async (req, res, next) => {
   try {
     const { filename } = req.params;
-    const bucket = getStorage();
+    const bucket = admin.storage().bucket();
     
     // Ensure filename starts with 'products/'
     const fullPath = filename.startsWith('products/') ? filename : `products/${filename}`;

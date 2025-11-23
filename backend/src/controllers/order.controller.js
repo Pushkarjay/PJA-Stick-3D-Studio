@@ -1,4 +1,4 @@
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -19,7 +19,6 @@ exports.createOrder = async (req, res, next) => {
   try {
     const { uid, email } = req.user;
     const { items, shippingAddress, paymentMethod, notes } = req.body;
-    const db = getFirestore();
 
     // Validate items
     if (!items || items.length === 0) {
@@ -115,7 +114,6 @@ exports.createOrder = async (req, res, next) => {
 exports.getUserOrders = async (req, res, next) => {
   try {
     const { uid } = req.user;
-    const db = getFirestore();
 
     const snapshot = await db.collection('orders')
       .where('customerId', '==', uid)
@@ -146,7 +144,6 @@ exports.getOrderById = async (req, res, next) => {
   try {
     const { uid } = req.user;
     const { id } = req.params;
-    const db = getFirestore();
 
     const doc = await db.collection('orders').doc(id).get();
 
@@ -180,7 +177,6 @@ exports.cancelOrder = async (req, res, next) => {
   try {
     const { uid } = req.user;
     const { id } = req.params;
-    const db = getFirestore();
 
     const orderRef = db.collection('orders').doc(id);
     const doc = await orderRef.get();
@@ -232,7 +228,6 @@ exports.cancelOrder = async (req, res, next) => {
 exports.trackOrder = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const db = getFirestore();
 
     const doc = await db.collection('orders').doc(id).get();
 

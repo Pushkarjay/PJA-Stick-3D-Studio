@@ -1,4 +1,4 @@
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -7,8 +7,6 @@ const { logger } = require('../utils/logger');
  */
 exports.getDashboard = async (req, res, next) => {
   try {
-    const db = getFirestore();
-
     // Get counts
     const [productsSnap, ordersSnap, usersSnap] = await Promise.all([
       db.collection('products').where('isActive', '==', true).count().get(),
@@ -67,7 +65,6 @@ exports.getDashboard = async (req, res, next) => {
 exports.getAnalytics = async (req, res, next) => {
   try {
     const { period = '30d' } = req.query;
-    const db = getFirestore();
 
     // Calculate date range
     const now = new Date();
@@ -122,7 +119,6 @@ exports.getAnalytics = async (req, res, next) => {
 exports.createProduct = async (req, res, next) => {
   try {
     const productData = req.body;
-    const db = getFirestore();
 
     const product = {
       ...productData,
@@ -159,7 +155,6 @@ exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
-    const db = getFirestore();
 
     await db.collection('products').doc(id).update({
       ...updates,
@@ -183,7 +178,6 @@ exports.updateProduct = async (req, res, next) => {
 exports.deleteProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const db = getFirestore();
 
     await db.collection('products').doc(id).update({
       isActive: false,
@@ -207,7 +201,6 @@ exports.deleteProduct = async (req, res, next) => {
 exports.bulkUploadProducts = async (req, res, next) => {
   try {
     const { products } = req.body;
-    const db = getFirestore();
 
     const batch = db.batch();
 
@@ -247,7 +240,6 @@ exports.bulkUploadProducts = async (req, res, next) => {
 exports.getAllOrders = async (req, res, next) => {
   try {
     const { status, page = 1, limit = 20 } = req.query;
-    const db = getFirestore();
 
     let query = db.collection('orders');
 
@@ -283,7 +275,6 @@ exports.updateOrderStatus = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { status, note } = req.body;
-    const db = getFirestore();
 
     const orderRef = db.collection('orders').doc(id);
     const doc = await orderRef.get();
@@ -323,8 +314,6 @@ exports.updateOrderStatus = async (req, res, next) => {
  */
 exports.getAllUsers = async (req, res, next) => {
   try {
-    const db = getFirestore();
-
     const snapshot = await db.collection('users')
       .orderBy('createdAt', 'desc')
       .get();
@@ -358,7 +347,6 @@ exports.updateUserRole = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { role } = req.body;
-    const db = getFirestore();
 
     if (!['customer', 'admin', 'super_admin'].includes(role)) {
       throw new AppError('Invalid role', 400, 'INVALID_ROLE');

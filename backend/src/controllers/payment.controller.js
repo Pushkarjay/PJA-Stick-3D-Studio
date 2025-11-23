@@ -1,5 +1,5 @@
 const crypto = require('crypto');
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -9,7 +9,6 @@ const { logger } = require('../utils/logger');
 exports.createPaymentOrder = async (req, res, next) => {
   try {
     const { orderId, amount, paymentMethod } = req.body;
-    const db = getFirestore();
 
     // Verify order exists
     const orderDoc = await db.collection('orders').doc(orderId).get();
@@ -50,7 +49,6 @@ exports.verifyPayment = async (req, res, next) => {
     const { orderId, transactionId, paymentMethod, notes } = req.body;
 
     // Update order payment status (manual confirmation by admin)
-    const db = getFirestore();
     const orderRef = db.collection('orders').doc(orderId);
     const orderDoc = await orderRef.get();
     

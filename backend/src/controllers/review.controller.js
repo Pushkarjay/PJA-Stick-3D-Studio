@@ -1,4 +1,4 @@
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -7,7 +7,6 @@ const { AppError } = require('../middleware/errorHandler');
 exports.getProductReviews = async (req, res, next) => {
   try {
     const { productId } = req.params;
-    const db = getFirestore();
 
     const snapshot = await db.collection('reviews')
       .where('productId', '==', productId)
@@ -36,7 +35,6 @@ exports.createReview = async (req, res, next) => {
   try {
     const { productId, rating, title, comment, images } = req.body;
     const { uid, displayName } = req.user;
-    const db = getFirestore();
 
     // Check if user already reviewed this product
     const existingReview = await db.collection('reviews')
@@ -103,7 +101,6 @@ exports.updateReview = async (req, res, next) => {
     const { id } = req.params;
     const { rating, title, comment } = req.body;
     const { uid } = req.user;
-    const db = getFirestore();
 
     const doc = await db.collection('reviews').doc(id).get();
 
@@ -143,7 +140,6 @@ exports.deleteReview = async (req, res, next) => {
   try {
     const { id } = req.params;
     const { uid } = req.user;
-    const db = getFirestore();
 
     const doc = await db.collection('reviews').doc(id).get();
 
@@ -175,8 +171,6 @@ exports.deleteReview = async (req, res, next) => {
  * Helper function to update product rating
  */
 async function updateProductRating(productId) {
-  const db = getFirestore();
-
   const reviewsSnap = await db.collection('reviews')
     .where('productId', '==', productId)
     .where('status', '==', 'approved')

@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { getAuth } = require('../config/firebase');
+const { admin } = require('../services/firebase.service');
 const { AppError } = require('./errorHandler');
 const { logger } = require('../utils/logger');
 
@@ -21,8 +21,7 @@ async function verifyToken(req, res, next) {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Verify Firebase token
-    const auth = getAuth();
-    const firebaseUser = await auth.getUser(decoded.uid);
+    const firebaseUser = await admin.auth().getUser(decoded.uid);
     
     if (!firebaseUser) {
       throw new AppError('User not found', 401, 'USER_NOT_FOUND');
@@ -81,8 +80,7 @@ async function optionalAuth(req, res, next) {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
-    const auth = getAuth();
-    const firebaseUser = await auth.getUser(decoded.uid);
+    const firebaseUser = await admin.auth().getUser(decoded.uid);
     
     if (firebaseUser) {
       req.user = {

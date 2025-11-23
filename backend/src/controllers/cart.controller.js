@@ -1,4 +1,4 @@
-const { getFirestore } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 
 /**
@@ -7,7 +7,6 @@ const { AppError } = require('../middleware/errorHandler');
 exports.getCart = async (req, res, next) => {
   try {
     const { uid } = req.user;
-    const db = getFirestore();
 
     const cartDoc = await db.collection('cart').doc(uid).get();
 
@@ -64,7 +63,6 @@ exports.addToCart = async (req, res, next) => {
   try {
     const { uid } = req.user;
     const { productId, quantity = 1 } = req.body;
-    const db = getFirestore();
 
     // Verify product exists
     const productDoc = await db.collection('products').doc(productId).get();
@@ -126,7 +124,6 @@ exports.updateCartItem = async (req, res, next) => {
     const { uid } = req.user;
     const { itemId } = req.params;
     const { quantity } = req.body;
-    const db = getFirestore();
 
     if (quantity < 1) {
       throw new AppError('Quantity must be at least 1', 400, 'INVALID_QUANTITY');
@@ -169,7 +166,6 @@ exports.removeFromCart = async (req, res, next) => {
   try {
     const { uid } = req.user;
     const { itemId } = req.params;
-    const db = getFirestore();
 
     const cartRef = db.collection('cart').doc(uid);
     const cartDoc = await cartRef.get();
@@ -201,7 +197,6 @@ exports.removeFromCart = async (req, res, next) => {
 exports.clearCart = async (req, res, next) => {
   try {
     const { uid } = req.user;
-    const db = getFirestore();
 
     await db.collection('cart').doc(uid).delete();
 
