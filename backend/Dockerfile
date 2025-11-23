@@ -5,11 +5,19 @@ FROM node:18-slim AS builder
 
 WORKDIR /app
 
+# Install build dependencies for native modules (sharp, bcrypt)
+RUN apt-get update && apt-get install -y \
+    python3 \
+    make \
+    g++ \
+    && rm -rf /var/lib/apt/lists/*
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies (including dev dependencies for build)
-RUN npm ci
+# Using npm install instead of npm ci since package-lock.json is not in repo
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -22,7 +30,7 @@ WORKDIR /app
 
 # Install production dependencies only
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy built application from builder
 COPY --from=builder /app/src ./src
