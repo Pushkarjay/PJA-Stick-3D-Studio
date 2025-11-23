@@ -1,10 +1,10 @@
 // Configuration Module
 // Loads environment variables and secrets from Secret Manager
 
-import dotenv from 'dotenv'
-import { SecretManagerServiceClient } from '@google-cloud/secret-manager'
+const dotenv = require('dotenv');
+const { SecretManagerServiceClient } = require('@google-cloud/secret-manager');
 
-dotenv.config()
+dotenv.config();
 
 /**
  * Fetch secret from Google Secret Manager
@@ -85,7 +85,7 @@ const config = {
  * Initialize configuration and load secrets
  * Call this at application startup
  */
-export async function initializeConfig() {
+async function initializeConfig() {
   console.log('Initializing configuration...')
   
   // Load Twilio secrets (optional)
@@ -111,4 +111,5 @@ export async function initializeConfig() {
   console.log('Configuration initialized successfully')
 }
 
-export default config
+module.exports = config;
+module.exports.initializeConfig = initializeConfig;
