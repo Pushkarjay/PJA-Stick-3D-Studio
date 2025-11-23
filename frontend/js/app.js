@@ -4,7 +4,7 @@
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000/api'
-  : 'https://pja3d-backend-upwmdmk6tq-el.a.run.app/api';
+  : 'https://pja3d-backend-369377967204.asia-south1.run.app/api';
 
 // Global State
 let cart = JSON.parse(localStorage.getItem('pjaCart')) || [];
@@ -26,27 +26,18 @@ async function loadProducts() {
   try {
     showLoadingSkeletons();
     const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) throw new Error('Failed to load products');
+    if (!response.ok) throw new Error(`Failed to load products: ${response.status} ${response.statusText}`);
     
     const result = await response.json();
     // API returns: {success: true, data: {products: [...], pagination: {...}}}
     products = result.data?.products || result.data || [];
-    localStorage.setItem('pjaCachedProducts', JSON.stringify(products));
     
     hideLoadingSkeletons();
     renderProducts();
   } catch (error) {
     console.error('Error loading products:', error);
     hideLoadingSkeletons();
-    
-    // Fallback to cached products
-    const cachedProducts = localStorage.getItem('pjaCachedProducts');
-    if (cachedProducts) {
-      products = JSON.parse(cachedProducts);
-      renderProducts();
-    } else {
-      showError('Unable to load products. Please refresh the page.');
-    }
+    showError('Unable to load products. Please check your connection and refresh the page.');
   }
 }
 

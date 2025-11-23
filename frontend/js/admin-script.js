@@ -1,7 +1,7 @@
 // API Configuration
 const API_BASE_URL = window.location.hostname === 'localhost' 
   ? 'http://localhost:5000/api'
-  : 'https://pja3d-backend-upwmdmk6tq-el.a.run.app/api';
+  : 'https://pja3d-backend-369377967204.asia-south1.run.app/api';
 
 // Authentication - Hardcoded for prototype
 // TODO: Implement proper authentication for production
@@ -36,13 +36,46 @@ function showDashboard() {
 }
 
 // Login form handler
-document.getElementById('loginForm').addEventListener('submit', function(e) {
+document.getElementById('loginForm').addEventListener('submit', async function(e) {
   e.preventDefault();
   const username = document.getElementById('username').value;
   const password = document.getElementById('password').value;
   const errorDiv = document.getElementById('loginError');
 
+  // First try the hardcoded credentials for quick access
   if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
+    // Try to authenticate with backend to get JWT token
+    try {
+      console.log('🔐 Attempting backend authentication...');
+      const response = await fetch(`${API_BASE_URL}/auth/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: 'pushkarjay.ajay1@gmail.com', // Admin email
+          password: password
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.data.token) {
+          // Store JWT token
+          sessionStorage.setItem('adminToken', result.data.token);
+          sessionStorage.setItem('adminUser', result.data.user.email);
+          console.log('✅ Backend authentication successful - Token stored');
+          console.log('Token preview:', result.data.token.substring(0, 20) + '...');
+        }
+      } else {
+        const errorData = await response.json();
+        console.warn('⚠️ Backend authentication failed:', errorData.error?.message || response.statusText);
+        console.warn('⚠️ Continuing with local auth only - Admin features will be limited');
+      }
+    } catch (error) {
+      console.warn('⚠️ Could not authenticate with backend:', error.message);
+      console.warn('⚠️ Continuing with local auth only - Admin features will be limited');
+    }
+
+    // Allow login even if backend auth fails (for development)
     sessionStorage.setItem('adminLoggedIn', 'true');
     sessionStorage.setItem('adminUser', username);
     showDashboard();
@@ -83,22 +116,15 @@ document.querySelectorAll('.tab-btn').forEach(btn => {
 async function initializeProducts() {
   try {
     const response = await fetch(`${API_BASE_URL}/products`);
-    if (!response.ok) throw new Error('Failed to load products');
+    if (!response.ok) throw new Error(`Failed to load products: ${response.status} ${response.statusText}`);
     
     const result = await response.json();
     const products = result.data?.products || result.data || [];
     
-    localStorage.setItem('pjaProducts', JSON.stringify(products));
     return products;
   } catch (error) {
     console.error('Error loading products:', error);
-    
-    // Fallback to localStorage
-    const savedProducts = localStorage.getItem('pjaProducts');
-    if (savedProducts) {
-      return JSON.parse(savedProducts);
-    }
-    
+    showToast('Failed to load products from server: ' + error.message, true);
     return [];
   }
 }
@@ -109,80 +135,110 @@ async function getProducts() {
   return products;
 }
 
-// Save product (TODO: Implement POST/PUT to backend)
+// Save product to backend API
+// Note: Admin endpoints require authentication - implement JWT auth for production
 async function saveProduct(productData) {
-  console.warn('Product save to backend not fully implemented yet. Saving to localStorage.');
-  
-  // TODO: Uncomment when backend endpoints are ready
-  /*
   try {
+    const token = sessionStorage.getItem('adminToken');
+    
+    // Check if token exists
+    if (!token) {
+      throw new Error('No token provided');
+    }
+    
     const method = productData.id ? 'PUT' : 'POST';
     const endpoint = productData.id 
-      ? `${API_BASE_URL}/products/${productData.id}` 
-      : `${API_BASE_URL}/products`;
+      ? `${API_BASE_URL}/admin/products/${productData.id}` 
+      : `${API_BASE_URL}/admin/products`;
+    
+    // Format data for backend
+    const backendData = {
+      name: productData.name,
+      description: productData.description,
+      category: productData.category,
+      subCategory: productData.subCategory,
+      price: parseFloat(productData.price),
+      salePrice: parseFloat(productData.price),
+      discount: 0,
+      images: productData.imageUrl ? [productData.imageUrl] : [],
+      specifications: {
+        difficulty: productData.difficulty,
+        time: productData.time,
+        material: productData.material
+      },
+      stock: 100,
+      isActive: true,
+      trending: productData.trending || false,
+      featured: productData.trending || false
+    };
     
     const response = await fetch(endpoint, {
       method,
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(productData)
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      },
+      body: JSON.stringify(backendData)
     });
     
-    if (!response.ok) throw new Error('Failed to save product');
-    return await response.json();
+    if (!response.ok) {
+      if (response.status === 401) {
+        sessionStorage.clear();
+        showLogin();
+        throw new Error('Session expired. Please login again.');
+      }
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to save product');
+    }
+    
+    const result = await response.json();
+    return result.data || productData;
   } catch (error) {
     console.error('Error saving product:', error);
+    showToast('Failed to save product: ' + error.message, true);
     throw error;
   }
-  */
-  
-  // Temporary localStorage fallback
-  const products = await getProducts();
-  if (productData.id) {
-    const index = products.findIndex(p => p.id === productData.id);
-    if (index !== -1) products[index] = productData;
-  } else {
-    productData.id = `prod_${Date.now()}`;
-    products.push(productData);
-  }
-  localStorage.setItem('pjaProducts', JSON.stringify(products));
-  return productData;
 }
 
-// Delete product (TODO: Implement DELETE to backend)
+// Delete product from backend API
+// Note: Admin endpoints require authentication - implement JWT auth for production
 async function deleteProductById(productId) {
-  console.warn('Product delete from backend not fully implemented yet. Deleting from localStorage.');
-  
-  // TODO: Uncomment when backend endpoints are ready
-  /*
   try {
-    const response = await fetch(`${API_BASE_URL}/products/${productId}`, {
-      method: 'DELETE'
+    const token = sessionStorage.getItem('adminToken');
+    
+    if (!token) {
+      throw new Error('No token provided');
+    }
+    
+    const response = await fetch(`${API_BASE_URL}/admin/products/${productId}`, {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
     });
     
-    if (!response.ok) throw new Error('Failed to delete product');
+    if (!response.ok) {
+      if (response.status === 401) {
+        sessionStorage.clear();
+        showLogin();
+        throw new Error('Session expired. Please login again.');
+      }
+      const error = await response.json();
+      throw new Error(error.error?.message || 'Failed to delete product');
+    }
+    
     return await response.json();
   } catch (error) {
     console.error('Error deleting product:', error);
+    showToast('Failed to delete product: ' + error.message, true);
     throw error;
   }
-  */
-  
-  // Temporary localStorage fallback
-  const products = await getProducts();
-  const filtered = products.filter(p => p.id !== productId);
-  localStorage.setItem('pjaProducts', JSON.stringify(filtered));
 }
 
-// Save products (DEPRECATED - use saveProduct instead)
-function saveProducts(products) {
-  localStorage.setItem('pjaProducts', JSON.stringify(products));
-  console.warn('saveProducts() is deprecated. Use saveProduct() for individual products.');
-}
-
-// Update main site data
+// Update main site data - This is now handled by the backend API
 function updateMainSiteData(products) {
-  // This will be used by the main site to load products
-  localStorage.setItem('pjaProductsPublic', JSON.stringify(products));
+  console.log('Products are now served directly from backend API');
 }
 
 // Load products
