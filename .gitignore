@@ -40,9 +40,15 @@ yarn-error.log*
 .env
 .env.local
 .env.*.local
+.env.admin
 *-firebase-adminsdk-*.json
 serviceAccountKey.json
 firebase-adminsdk.json
+
+# Security - Never commit these!
+backend/.env.admin
+**/credentials.json
+**/secrets.json
 
 # OS
 Thumbs.db

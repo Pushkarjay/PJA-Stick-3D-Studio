@@ -1,180 +1,382 @@
-# PJA Stick & 3D Studio - E-Commerce Platform
+# PJA Stick & 3D Studio
 
-<div align="center">
+> **PRINT. STICK. CREATE.**  
+> Flip Names, Moon Lamps & Divine Idols  
+> **Now Open at Suresh Singh Chowk**
 
-![PJA Logo](logo_square.png)
+A production-ready full-stack e-commerce platform for PJA Stick & 3D Studio, featuring custom 3D printing, stickers, and printing services with WhatsApp-based ordering.
 
-**🚀 Full-Stack E-Commerce Platform for 3D Prints, Stickers & Printing Services**
+## 🚀 One-Line Deploy (After Setup)
 
-[![Firebase](https://img.shields.io/badge/Firebase-FFCA28?style=for-the-badge&logo=firebase&logoColor=black)](https://firebase.google.com)
-[![Node.js](https://img.shields.io/badge/Node.js-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org)
-[![Express.js](https://img.shields.io/badge/Express.js-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com)
-[![Google Cloud](https://img.shields.io/badge/Google_Cloud-4285F4?style=for-the-badge&logo=google-cloud&logoColor=white)](https://cloud.google.com)
-
-[🌐 Live Demo](https://pja3d-fire.web.app) | [📖 API Docs](#api-documentation) | [🔧 Setup Guide](#setup--installation)
-
-</div>
-
----
+```bash
+# Frontend + Backend
+npm run deploy
+```
 
 ## 📋 Table of Contents
-- [Overview](#overview)
-- [Features](#features)
-- [Tech Stack](#tech-stack)
+
 - [Architecture](#architecture)
-- [Setup & Installation](#setup--installation)
-- [Google Cloud Services](#google-cloud-services-needed)
-- [API Documentation](#api-documentation)
-- [Deployment](#deployment)
+- [Tech Stack](#tech-stack)
+- [Prerequisites](#prerequisites)
+- [Local Development](#local-development)
+- [Production Deployment](#production-deployment)
+- [Environment Variables](#environment-variables)
+- [Creating Admin Account](#creating-admin-account)
+- [WhatsApp Integration](#whatsapp-integration)
+- [Security](#security)
+- [Testing](#testing)
+- [Monitoring](#monitoring)
+- [Go-Live Checklist](#go-live-checklist)
 
----
+## 🏗️ Architecture
 
-## 🎯 Overview
-
-PJA Stick & 3D Studio is a modern, full-stack e-commerce platform designed for selling 3D printed products, custom stickers, and professional printing services in Daltonganj. Built with Firebase backend, Express.js REST API, and deployed on Google Cloud Platform.
-
-### Business Model
-- **3D Printing**: Custom flip names, moon lamps, divine idols, lithophane frames
-- **Stickers**: Waterproof laptop skins, mobile skins, anime decals
-- **Printing**: Document printing, project reports (B/W & Color)
-
----
-
-## ✨ Features
-
-### Customer Features
-- ✅ User authentication (Email/Password, Google Sign-In)
-- 🛒 Shopping cart with real-time sync
-- 💳 Secure payment integration (Razorpay)
-- 📦 Order tracking with status updates
-- ⭐ Product reviews and ratings
-- 🔍 Advanced search and filters
-- 📱 Mobile-responsive PWA
-- 💌 Email and WhatsApp notifications
-
-### Admin Features
-- 📊 Comprehensive dashboard with analytics
-- 🎨 Product management (CRUD operations)
-- 📦 Order processing and fulfillment
-- 👥 User management
-- 📈 Sales reports and insights
-- 🖼️ Image upload with optimization
-- 📋 Bulk product import
-
-### Technical Features
-- 🔐 JWT-based authentication
-- 🛡️ Role-based access control (RBAC)
-- 🚀 RESTful API architecture
-- 📦 Firebase Firestore database
-- 🖼️ Firebase Storage for images
-- 🔄 Real-time data synchronization
-- 📧 Automated email notifications
-- 🧪 Comprehensive error handling
-- 📝 Request logging and monitoring
-
----
+```
+┌─────────────────┐
+│  Firebase       │
+│  Hosting        │◄──── Custom Domain (HTTPS)
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐         ┌──────────────────┐
+│  React/Vite     │────────►│  Cloud Run API   │
+│  Frontend       │         │  (Node/Express)  │
+│  (Static SPA)   │         └────────┬─────────┘
+└─────────────────┘                  │
+         │                           │
+         │                           ▼
+         │                  ┌──────────────────┐
+         │                  │   Firestore      │
+         │                  │   (Database)     │
+         │                  └──────────────────┘
+         │                           │
+         │                           ▼
+         │                  ┌──────────────────┐
+         │                  │  Cloud Storage   │
+         │                  │  (Product Imgs)  │
+         │                  └──────────────────┘
+         │                           │
+         ▼                           ▼
+┌─────────────────┐         ┌──────────────────┐
+│  Firebase Auth  │         │ Secret Manager   │
+│  (Admin Login)  │         │  (Credentials)   │
+└─────────────────┘         └──────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────┐
+│  WhatsApp (916372362313)            │
+│  - wa.me (primary)                  │
+│  - Twilio Business API (optional)   │
+└─────────────────────────────────────┘
+```
 
 ## 🛠️ Tech Stack
 
 ### Frontend
-```javascript
-{
-  "core": "HTML5, CSS3, JavaScript ES6+",
-  "styling": "Custom CSS with CSS Grid & Flexbox",
-  "state": "localStorage + Fetch API",
-  "icons": "SVG",
-  "future": "React.js migration planned"
-}
-```
+- **Framework:** React 18 with Vite
+- **Styling:** Tailwind CSS
+- **Icons:** lucide-react
+- **State Management:** React Context + Hooks
+- **Routing:** React Router v6
+- **Auth:** Firebase Client SDK
+- **Build:** Vite (ES modules, fast HMR)
 
 ### Backend
-```javascript
-{
-  "runtime": "Node.js v18+",
-  "framework": "Express.js v4.x",
-  "authentication": "Firebase Auth + JWT",
-  "database": "Firebase Firestore",
-  "storage": "Firebase Storage",
-  "payments": "Razorpay",
-  "email": "Nodemailer + SMTP"
-}
-```
+- **Runtime:** Node.js 18+
+- **Framework:** Express.js
+- **Database:** Google Cloud Firestore
+- **Storage:** Google Cloud Storage
+- **Auth:** Firebase Admin SDK
+- **Validation:** Joi
+- **Security:** Helmet, express-rate-limit
+- **Logging:** Winston (structured JSON)
 
 ### Infrastructure
-```javascript
+- **Hosting:** Firebase Hosting (Frontend)
+- **API:** Google Cloud Run (Backend)
+- **Database:** Firestore (Production Mode)
+- **Storage:** Cloud Storage (Public bucket for images)
+- **Secrets:** Google Secret Manager
+- **CI/CD:** GitHub Actions
+- **Monitoring:** Cloud Logging, Cloud Monitoring
+
+### Messaging
+- **Primary:** WhatsApp wa.me links (client-side, zero cost)
+- **Optional:** Twilio WhatsApp Business API (server-side notifications)
+
+## 📦 Prerequisites
+
+1. **Node.js 18+** and npm
+2. **Google Cloud Project** with billing enabled
+3. **Firebase Project** (can be linked to GCP project)
+4. **Git** and **GitHub** account
+5. **gcloud CLI** - [Install](https://cloud.google.com/sdk/docs/install)
+6. **Firebase CLI** - `npm install -g firebase-tools`
+7. **Docker** (optional, for local backend testing)
+
+## 🏃 Local Development
+
+### 1. Clone Repository
+
+```bash
+git clone https://github.com/<<YOUR_GITHUB_USERNAME>>/PJA-Stick-3D-Studio.git
+cd PJA-Stick-3D-Studio
+```
+
+### 2. Install Dependencies
+
+```bash
+# Install root dependencies
+npm install
+
+# Install frontend dependencies
+cd frontend
+npm install
+cd ..
+
+# Install backend dependencies
+cd backend
+npm install
+cd ..
+```
+
+### 3. Setup Firebase Project
+
+```bash
+# Login to Firebase
+firebase login
+
+# Initialize Firebase (select existing project or create new)
+firebase init
+
+# Select: Hosting, Firestore, Storage
+# Use existing files when prompted
+```
+
+### 4. Setup Environment Variables
+
+#### Frontend (.env)
+Create `frontend/.env`:
+
+```env
+VITE_FIREBASE_API_KEY=<<YOUR_FIREBASE_API_KEY>>
+VITE_FIREBASE_AUTH_DOMAIN=<<YOUR_PROJECT_ID>>.firebaseapp.com
+VITE_FIREBASE_PROJECT_ID=<<YOUR_PROJECT_ID>>
+VITE_FIREBASE_STORAGE_BUCKET=<<YOUR_PROJECT_ID>>.appspot.com
+VITE_FIREBASE_MESSAGING_SENDER_ID=<<YOUR_SENDER_ID>>
+VITE_FIREBASE_APP_ID=<<YOUR_APP_ID>>
+VITE_API_URL=http://localhost:8080
+VITE_WHATSAPP_NUMBER=916372362313
+```
+
+#### Backend (.env)
+Create `backend/.env`:
+
+```env
+# GCP & Firebase
+GCP_PROJECT_ID=<<YOUR_GCP_PROJECT_ID>>
+FIREBASE_PROJECT_ID=<<YOUR_FIREBASE_PROJECT_ID>>
+GOOGLE_APPLICATION_CREDENTIALS=./service-account-key.json
+
+# Storage
+GCS_BUCKET_NAME=<<YOUR_PROJECT_ID>>-products
+
+# API Configuration
+PORT=8080
+NODE_ENV=development
+CORS_ORIGIN=http://localhost:5173
+
+# WhatsApp
+SHOP_WHATSAPP_NUMBER=916372362313
+
+# Twilio (Optional - only if using Business API)
+TWILIO_ACCOUNT_SID=<<YOUR_TWILIO_SID>>
+TWILIO_AUTH_TOKEN=<<YOUR_TWILIO_TOKEN>>
+TWILIO_WHATSAPP_FROM=whatsapp:+14155238886
+
+# Rate Limiting
+RATE_LIMIT_WINDOW_MS=900000
+RATE_LIMIT_MAX_REQUESTS=100
+```
+
+### 5. Download Service Account Key
+
+```bash
+# Create service account
+gcloud iam service-accounts create pja3d-local-dev \
+  --display-name="PJA 3D Local Development"
+
+# Grant roles
+gcloud projects add-iam-policy-binding <<YOUR_PROJECT_ID>> \
+  --member="serviceAccount:pja3d-local-dev@<<YOUR_PROJECT_ID>>.iam.gserviceaccount.com" \
+  --role="roles/datastore.user"
+
+gcloud projects add-iam-policy-binding <<YOUR_PROJECT_ID>> \
+  --member="serviceAccount:pja3d-local-dev@<<YOUR_PROJECT_ID>>.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Download key
+gcloud iam service-accounts keys create backend/service-account-key.json \
+  --iam-account=pja3d-local-dev@<<YOUR_PROJECT_ID>>.iam.gserviceaccount.com
+```
+
+⚠️ **NEVER commit service-account-key.json to Git!**
+
+### 6. Deploy Firestore Rules & Indexes
+
+```bash
+firebase deploy --only firestore:rules,firestore:indexes
+```
+
+### 7. Start Development Servers
+
+#### Terminal 1 - Backend
+```bash
+cd backend
+npm run dev
+```
+
+#### Terminal 2 - Frontend
+```bash
+cd frontend
+npm run dev
+```
+
+Visit: http://localhost:5173
+
+## 🚀 Production Deployment
+
+See [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) for complete deployment guide.
+
+### Quick Deploy Commands
+
+```bash
+# Deploy backend
+cd backend
+gcloud run deploy pja3d-backend \
+  --source . \
+  --region us-central1 \
+  --allow-unauthenticated
+
+# Deploy frontend
+cd frontend
+npm run build
+firebase deploy --only hosting
+```
+
+## 🔐 Creating Admin Account
+
+### Set Admin Role in Firestore
+1. Create user in Firebase Authentication
+2. Copy User UID
+3. Add document to `users` collection:
+
+```json
 {
-  "hosting": "Firebase Hosting",
-  "backend": "Google Cloud Run",
-  "database": "Firebase Firestore",
-  "storage": "Firebase Storage",
-  "cdn": "Firebase CDN",
-  "ci-cd": "GitHub Actions",
-  "monitoring": "Google Cloud Monitoring"
+  "email": "admin@pja3d.com",
+  "role": "admin",
+  "createdAt": "2024-01-01T00:00:00Z",
+  "updatedAt": "2024-01-01T00:00:00Z"
 }
-
-## 📁 Project Structure
-
-```
-PJA-Stick-3D-Studio/
-├── index.html      # Main HTML file
-├── styles.css      # All CSS styles
-├── script.js       # JavaScript functionality
-├── logo.png        # Brand logo
-├── logo_square.png # Square logo variant
-└── README.md       # This file
 ```
 
-## 🎨 Features
+Or use the admin creation endpoint (see backend API docs).
 
-### Product Categories
-- 3D Print
-- Stickers
-- Printing
+## 📱 WhatsApp Integration
 
-### Interactive Elements
-- Product filtering by category
-- Modal popups with product details
-- Mobile-responsive navigation
-- Toast notifications
-- WhatsApp order integration
+### Primary: wa.me Links
+- No setup required
+- Zero cost
+- Immediate availability
 
-## 🚀 Deployment
+### Optional: Twilio WhatsApp Business API
+See [docs/WHATSAPP.md](./docs/WHATSAPP.md) for setup instructions.
 
-This site is designed for easy deployment on GitHub Pages:
+## 🔒 Security
 
-1. Push the repository to GitHub
-2. Go to Settings → Pages
-3. Set Source to "Deploy from a branch"
-4. Select `main` branch and `/ (root)` folder
-5. Save and your site will be live!
+- Firestore security rules enforced
+- API rate limiting enabled
+- Input validation on all endpoints
+- Helmet.js security headers
+- CORS restrictions
+- Secret Manager for credentials
+- HTTPS enforced
 
-## 📱 Contact
+See [docs/SECURITY.md](./docs/SECURITY.md) for details.
 
-- **Phone**: +91 6372362313
-- **Location**: Suresh Singh Chowk, Panki Road, Redma, Daltonganj
+## 🧪 Testing
 
-## 📝 License
+```bash
+# Run all tests
+npm test
 
-© 2025 PJA Stick & 3D Studio. All rights reserved.
+# Lint code
+npm run lint
 
-## 🔧 Local Development
+# Audit repository
+./scripts/audit-repo.sh
+```
 
-To run locally:
+## 📊 Monitoring
 
-1. Clone the repository
-2. Open `index.html` in your browser
-3. No build process needed!
+```bash
+# View backend logs
+gcloud logging read "resource.type=cloud_run_revision" --limit 50
 
-## 🌟 Features Highlights
+# View frontend logs
+firebase hosting:logs
+```
 
-- ✅ No build tools required
-- ✅ No dependencies
-- ✅ Fast loading
-- ✅ SEO optimized
-- ✅ Mobile responsive
-- ✅ GitHub Pages compatible
-- ✅ Zero hosting costs
+## ✅ Go-Live Checklist
+
+### Critical (Must Complete)
+1. ✓ Firebase Production Mode enabled
+2. ✓ Firestore security rules deployed
+3. ✓ All secrets in Secret Manager
+4. ✓ Service accounts with least-privilege roles
+5. ✓ HTTPS enforced with SSL certificate
+6. ✓ Automated backups configured
+7. ✓ Admin account created and tested
+8. ✓ Rate limiting enabled
+9. ✓ Error monitoring configured
+10. ✓ Legal pages (Privacy, Terms) added
+
+### Important
+11. Load testing completed
+12. CSP headers configured
+13. Images optimized
+14. Mobile testing done
+15. WhatsApp links verified
+16. CORS properly configured
+17. Cache headers set
+18. Custom error pages
+19. Accessibility audit passed
+20. SEO optimized
+
+### Recommended
+21. Analytics tracking
+22. Performance monitoring
+23. Social media integration
+24. PWA manifest
+25. Staging environment
+26. Internal documentation
+27. WhatsApp Business profile
+28. Backup restoration tested
+29. Incident response plan
+30. Code cleanup
+
+## 📚 Documentation
+
+- [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) - Deployment guide
+- [docs/SECURITY.md](./docs/SECURITY.md) - Security practices
+- [docs/WHATSAPP.md](./docs/WHATSAPP.md) - WhatsApp integration
+- [docs/API.md](./docs/API.md) - API documentation
+
+## 📞 Support
+
+- **WhatsApp:** +91 6372362313
+- **Location:** Suresh Singh Chowk
+- **Email:** info@pja3dstudio.com
 
 ---
 
-Formerly known as **KIIT-PRINT**
+**Built with ❤️ for PJA Stick & 3D Studio**
