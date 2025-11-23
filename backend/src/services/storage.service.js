@@ -1,6 +1,6 @@
 const { Storage } = require('@google-cloud/storage');
 const config = require('../config');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 const path = require('path');
 
 // Initialize Cloud Storage

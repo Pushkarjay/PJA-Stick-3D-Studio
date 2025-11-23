@@ -26,7 +26,6 @@ RUN npm ci --only=production
 
 # Copy built application from builder
 COPY --from=builder /app/src ./src
-COPY --from=builder /app/config ./config
 
 # Create non-root user
 RUN useradd -r -u 1001 -g root appuser && \

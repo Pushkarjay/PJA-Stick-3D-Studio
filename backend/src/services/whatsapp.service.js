@@ -1,6 +1,6 @@
 const twilio = require('twilio');
 const config = require('../config');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 let twilioClient = null;
 

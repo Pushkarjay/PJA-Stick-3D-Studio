@@ -7,7 +7,7 @@ const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
 const config = require('./config');
-const logger = require('./utils/logger');
+const { logger } = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
 
