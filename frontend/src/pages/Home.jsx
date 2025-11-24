@@ -9,6 +9,7 @@ import CartDrawer from '../components/CartDrawer'
 import Footer from '../components/Footer'
 import { getProducts } from '../lib/api'
 
+export default function Home() {
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [loading, setLoading] = useState(true)

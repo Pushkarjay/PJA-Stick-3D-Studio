@@ -2,6 +2,7 @@ import NavBar from '../components/NavBar'
 import Footer from '../components/Footer'
 import { useEffect, useState } from 'react'
 
+export default function Contact() {
   const [footerSettings, setFooterSettings] = useState(null)
 
   useEffect(() => {

@@ -1,19 +1,19 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, CheckCircle2 } from 'lucide-react'
 import NavBar from '../components/NavBar'
 import Footer from '../components/Footer'
-import { useEffect, useState as useState2 } from 'react'
 import { useCart } from '../hooks/useCart'
 import { createOrder } from '../lib/api'
 import { openWhatsApp, formatCheckoutMessage } from '../utils/whatsapp'
 
+export default function Checkout() {
   const navigate = useNavigate()
   const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderId, setOrderId] = useState(null)
-  const [footerSettings, setFooterSettings] = useState2(null)
+  const [footerSettings, setFooterSettings] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
