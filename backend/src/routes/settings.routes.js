@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const settingsController = require('../controllers/settings.controller');
-const { authenticateAdmin } = require('../middleware/auth');
+const { verifyToken, requireAdmin } = require('../middleware/auth');
 const multer = require('multer');
 const path = require('path');
 
@@ -35,7 +35,7 @@ const upload = multer({
 router.get('/', settingsController.getSettings);
 
 // Admin routes - require authentication
-router.put('/', authenticateAdmin, settingsController.updateSettings);
-router.post('/upload-image', authenticateAdmin, upload.single('image'), settingsController.uploadImage);
+router.put('/', verifyToken, requireAdmin, settingsController.updateSettings);
+router.post('/upload-image', verifyToken, requireAdmin, upload.single('image'), settingsController.uploadImage);
 
 module.exports = router;
