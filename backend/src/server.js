@@ -38,15 +38,32 @@ app.use(helmet({
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.NODE_ENV === 'production'
-    ? [
-        process.env.FRONTEND_URL || 'https://pja3d-fire.web.app',
-        'https://pja3d-fire.firebaseapp.com',
-        /\.firebaseapp\.com$/,
-        /\.web\.app$/
-      ]
-    : '*',
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://pja3d-fire.web.app',
+      'https://pja3d-fire.firebaseapp.com',
+      'http://localhost:5173',
+      'http://localhost:3000'
+    ];
+    
+    // Check if origin matches exactly or matches domain patterns
+    const isAllowed = allowedOrigins.includes(origin) || 
+                      /\.firebaseapp\.com$/.test(origin) || 
+                      /\.web\.app$/.test(origin) ||
+                      process.env.NODE_ENV !== 'production';
+    
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
 };
 app.use(cors(corsOptions));
 

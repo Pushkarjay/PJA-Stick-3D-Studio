@@ -1,5 +1,5 @@
 const { db } = require('../services/firebase.service');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Get all products with optional filtering

@@ -1,6 +1,7 @@
 const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
+const { generateSignedUploadUrl } = require('../services/storage.service');
 
 /**
  * Get dashboard statistics
@@ -128,7 +129,7 @@ exports.createProduct = async (req, res, next) => {
         reviewCount: 0,
         averageRating: 0
       },
-      isActive: true,
+      isActive: productData.isActive !== undefined ? productData.isActive : true,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: req.user.uid
@@ -136,14 +137,15 @@ exports.createProduct = async (req, res, next) => {
 
     const docRef = await db.collection('products').add(product);
 
-    logger.info(`Product created: ${docRef.id} by ${req.user.email}`);
+    logger.info(`Product created: ${docRef.id} by ${req.user.email || req.user.uid}`);
 
     res.status(201).json({
       success: true,
-      data: { id: docRef.id },
+      data: { id: docRef.id, product },
       message: 'Product created successfully'
     });
   } catch (error) {
+    logger.error('Error creating product:', error);
     next(error);
   }
 };
@@ -362,6 +364,36 @@ exports.updateUserRole = async (req, res, next) => {
     res.json({
       success: true,
       message: 'User role updated'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get signed upload URL for Cloud Storage (Admin)
+ */
+exports.getUploadUrl = async (req, res, next) => {
+  try {
+    const { fileName, contentType } = req.body;
+
+    if (!fileName || !contentType) {
+      throw new AppError('fileName and contentType are required', 400, 'MISSING_PARAMS');
+    }
+
+    // Validate content type
+    if (!contentType.startsWith('image/')) {
+      throw new AppError('Only image files are allowed', 400, 'INVALID_FILE_TYPE');
+    }
+
+    const { uploadUrl, publicUrl } = await generateSignedUploadUrl(fileName, contentType);
+
+    logger.info(`Upload URL generated for: ${fileName} by ${req.user.email || req.user.uid}`);
+
+    res.json({
+      success: true,
+      uploadUrl,
+      publicUrl
     });
   } catch (error) {
     next(error);

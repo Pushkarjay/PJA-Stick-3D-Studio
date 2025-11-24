@@ -5,22 +5,32 @@ const path = require('path');
 
 // Initialize Cloud Storage
 let storage;
+let bucket;
 
-if (process.env.NODE_ENV === 'production') {
-  // In production, use default credentials
-  storage = new Storage({
-    projectId: config.gcpProjectId,
-  });
-} else {
-  // In development, use service account key
-  const keyFilename = path.join(__dirname, '../../config/pja3d-fire-firebase-adminsdk-fbsvc-96219dabc7.json');
-  storage = new Storage({
-    projectId: config.gcpProjectId,
-    keyFilename,
-  });
+function initializeStorage() {
+  if (bucket) return bucket; // Return cached bucket if already initialized
+
+  if (process.env.NODE_ENV === 'production') {
+    // In production, use default credentials
+    storage = new Storage({
+      projectId: config.gcpProjectId,
+    });
+  } else {
+    // In development, use service account key
+    const keyFilename = path.join(__dirname, '../../config/pja3d-fire-firebase-adminsdk-fbsvc-96219dabc7.json');
+    storage = new Storage({
+      projectId: config.gcpProjectId,
+      keyFilename,
+    });
+  }
+
+  if (!config.gcs.bucketName) {
+    throw new Error('GCS_BUCKET_NAME environment variable is not set');
+  }
+
+  bucket = storage.bucket(config.gcs.bucketName);
+  return bucket;
 }
-
-const bucket = storage.bucket(config.gcsBucketName);
 
 /**
  * Generate a signed URL for uploading a file
@@ -30,6 +40,8 @@ const bucket = storage.bucket(config.gcsBucketName);
  */
 const generateSignedUploadUrl = async (fileName, contentType) => {
   try {
+    const bucket = initializeStorage();
+    
     // Generate unique filename with timestamp
     const timestamp = Date.now();
     const uniqueFileName = `products/${timestamp}-${fileName}`;
@@ -43,8 +55,8 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
       contentType,
     });
 
-    // Public URL for accessing the file
-    const publicUrl = `https://storage.googleapis.com/${config.gcsBucketName}/${uniqueFileName}`;
+    // Public URL for accessing the file (bucket is already public)
+    const publicUrl = `https://storage.googleapis.com/${config.gcs.bucketName}/${uniqueFileName}`;
 
     logger.info(`Generated signed upload URL for: ${uniqueFileName}`);
 
@@ -56,7 +68,7 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
     };
   } catch (error) {
     logger.error('Failed to generate signed upload URL:', error);
-    throw new Error('Failed to generate upload URL');
+    throw new Error('Failed to generate upload URL: ' + error.message);
   }
 };
 
@@ -67,11 +79,13 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
  */
 const deleteFile = async (fileName) => {
   try {
+    const bucket = initializeStorage();
+    
     // Extract filename from URL if full URL is provided
     let fileToDelete = fileName;
     if (fileName.includes('storage.googleapis.com')) {
       const urlParts = fileName.split('/');
-      fileToDelete = urlParts.slice(urlParts.indexOf(config.gcsBucketName) + 1).join('/');
+      fileToDelete = urlParts.slice(urlParts.indexOf(config.gcs.bucketName) + 1).join('/');
     }
 
     await bucket.file(fileToDelete).delete();
@@ -86,8 +100,7 @@ const deleteFile = async (fileName) => {
 };
 
 module.exports = {
-  storage,
-  bucket,
+  initializeStorage,
   generateSignedUploadUrl,
   deleteFile,
 };

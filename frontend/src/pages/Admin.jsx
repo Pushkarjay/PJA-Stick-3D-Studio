@@ -5,6 +5,7 @@ import { doc, getDoc } from 'firebase/firestore'
 import { LogOut, Plus, Edit, Trash2, Upload, Package } from 'lucide-react'
 import { auth, db } from '../lib/firebaseClient'
 import { getProducts, createProduct, updateProduct, deleteProduct, getUploadUrl, uploadImage, getOrders, updateOrderStatus } from '../lib/api'
+import ProductForm from '../components/ProductForm'
 
 export default function Admin() {
   const navigate = useNavigate()
@@ -28,14 +29,13 @@ export default function Admin() {
 
   // Check auth state
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUser(user)
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
+      if (currentUser) {
+        setUser(currentUser)
         // Check if user is admin
-        const userDoc = await getDoc(doc(db, 'users', user.uid))
+        const userDoc = await getDoc(doc(db, 'users', currentUser.uid))
         if (userDoc.exists() && userDoc.data().role === 'admin') {
           setIsAdmin(true)
-          fetchData()
         } else {
           setIsAdmin(false)
         }
@@ -49,6 +49,28 @@ export default function Admin() {
     return () => unsubscribe()
   }, [])
 
+  const fetchProducts = async () => {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const data = await getProducts({ isActive: false }) // Get all products including inactive
+      setProducts(data.data || [])
+    } catch (error) {
+      console.error('Error fetching products:', error)
+    }
+  }
+
+  const fetchOrders = async () => {
+    if (!user) return
+    try {
+      const token = await user.getIdToken()
+      const data = await getOrders(token)
+      setOrders(data.data?.orders || [])
+    } catch (error) {
+      console.error('Error fetching orders:', error)
+    }
+  }
+
   const fetchData = async () => {
     if (activeTab === 'products') {
       await fetchProducts()
@@ -57,31 +79,11 @@ export default function Admin() {
     }
   }
 
-  const fetchProducts = async () => {
-    try {
-      const token = await user.getIdToken()
-      const data = await getProducts({})
-      setProducts(data.products || [])
-    } catch (error) {
-      console.error('Error fetching products:', error)
-    }
-  }
-
-  const fetchOrders = async () => {
-    try {
-      const token = await user.getIdToken()
-      const data = await getOrders(token)
-      setOrders(data.orders || [])
-    } catch (error) {
-      console.error('Error fetching orders:', error)
-    }
-  }
-
   useEffect(() => {
-    if (isAdmin) {
+    if (isAdmin && user) {
       fetchData()
     }
-  }, [activeTab, isAdmin])
+  }, [activeTab, isAdmin, user])
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -377,31 +379,19 @@ export default function Admin() {
         )}
       </main>
 
-      {/* Product Form Modal - Simplified version */}
-      {/* Note: Full implementation would include complete form with image upload */}
+      {/* Product Form Modal */}
       {showProductForm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-          <div className="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-bold">
-                {editingProduct ? 'Edit Product' : 'Add New Product'}
-              </h2>
-            </div>
-            <div className="p-6">
-              <p className="text-slate-600">
-                Product form implementation here. Include fields for: name, description, category, 
-                subCategory, price, priceTier, difficulty, productionTime, stockQty, isActive, 
-                and image upload.
-              </p>
-              <div className="mt-6 flex gap-3">
-                <button onClick={() => setShowProductForm(false)} className="btn btn-outline flex-1">
-                  Cancel
-                </button>
-                <button className="btn btn-primary flex-1">Save Product</button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <ProductForm
+          product={editingProduct}
+          user={user}
+          onClose={() => {
+            setShowProductForm(false)
+            setEditingProduct(null)
+          }}
+          onSave={() => {
+            fetchProducts()
+          }}
+        />
       )}
     </div>
   )

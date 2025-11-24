@@ -1,6 +1,6 @@
 const { db } = require('../services/firebase.service');
 const { sendOrderNotification } = require('../services/whatsapp.service');
-const logger = require('../utils/logger');
+const { logger } = require('../utils/logger');
 
 /**
  * Generate unique order number
