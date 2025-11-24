@@ -13,10 +13,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy package files first for better caching
-COPY package.json package-lock.json ./
+COPY package.json ./
 
-# Install ALL dependencies using npm ci for reproducible builds
-RUN npm ci
+# Install ALL dependencies - use npm install since no lockfile
+RUN npm install
 
 # Copy source code
 COPY . .
@@ -28,10 +28,10 @@ FROM node:18-slim
 WORKDIR /app
 
 # Copy package files
-COPY package.json package-lock.json ./
+COPY package.json ./
 
 # Install ONLY production dependencies
-RUN npm ci --only=production
+RUN npm install --only=production
 
 # Copy source code from builder
 COPY --from=builder /app/src ./src
