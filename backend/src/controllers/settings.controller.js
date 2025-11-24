@@ -1,5 +1,5 @@
 // Settings Controller - Manage site-wide settings
-const { db } = require('../config/firebase');
+const { db } = require('../services/firebase.service');
 const { logger } = require('../utils/logger');
 
 // Get all settings

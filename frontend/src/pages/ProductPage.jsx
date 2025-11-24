@@ -5,6 +5,8 @@ import Footer from '../components/Footer'
 import { getProducts } from '../lib/api'
 import { useCart } from '../hooks/useCart'
 import { ShoppingCart, MessageCircle, ArrowLeft, Star, X } from 'lucide-react'
+import { openWhatsApp, formatProductMessage } from '../utils/whatsapp'
+
 // Sample reviews data (replace with API integration as needed)
 const sampleReviews = [
   {
@@ -23,7 +25,16 @@ const sampleReviews = [
     comment: 'Great service and support. Product exceeded expectations.',
   },
 ]
+
+export default function ProductPage() {
+  const { id } = useParams()
+  const navigate = useNavigate()
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [quantity, setQuantity] = useState(1)
   const [showReviews, setShowReviews] = useState(false)
+  const { addToCart } = useCart()
+
   // Helper to render stars
   const renderStars = (count) => (
     <span className="inline-flex gap-0.5">
@@ -32,15 +43,6 @@ const sampleReviews = [
       ))}
     </span>
   )
-import { openWhatsApp, formatProductMessage } from '../utils/whatsapp'
-
-export default function ProductPage() {
-  const { id } = useParams()
-  const navigate = useNavigate()
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [quantity, setQuantity] = useState(1)
-  const { addToCart } = useCart()
 
   useEffect(() => {
     fetchProduct()
