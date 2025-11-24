@@ -399,3 +399,139 @@ exports.getUploadUrl = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Create admin user
+ */
+exports.createAdminUser = async (req, res, next) => {
+  try {
+    const { email, password, displayName } = req.body;
+
+    if (!email || !password) {
+      throw new AppError('Email and password are required', 400, 'MISSING_PARAMS');
+    }
+
+    const admin = require('firebase-admin');
+
+    // Create user in Firebase Auth
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: displayName || email.split('@')[0]
+    });
+
+    // Create user document in Firestore with admin role
+    await db.collection('users').doc(userRecord.uid).set({
+      email,
+      displayName: displayName || email.split('@')[0],
+      role: 'admin',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    logger.info(`Admin user created: ${email} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Admin user created successfully',
+      data: {
+        uid: userRecord.uid,
+        email: userRecord.email,
+        displayName: userRecord.displayName
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * CSV Import for products
+ */
+exports.importProductsCSV = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new AppError('CSV file is required', 400, 'MISSING_FILE');
+    }
+
+    const parse = require('csv-parse/sync').parse;
+    const fs = require('fs');
+    
+    const fileContent = fs.readFileSync(req.file.path, 'utf-8');
+    const records = parse(fileContent, {
+      columns: true,
+      skip_empty_lines: true,
+      trim: true
+    });
+
+    const batch = db.batch();
+    const results = {
+      success: 0,
+      failed: 0,
+      errors: []
+    };
+
+    for (const record of records) {
+      try {
+        // Map CSV columns to product schema (flexible)
+        const productData = {
+          name: record.name || record.productName || '',
+          category: record.category || 'uncategorized',
+          subcategory: record.subcategory || '',
+          description: record.description || '',
+          basePrice: parseFloat(record.basePrice || record.price || 0),
+          baseDiscount: parseFloat(record.baseDiscount || 0),
+          extraDiscount: parseFloat(record.extraDiscount || 0),
+          stock: parseInt(record.stock || 0),
+          isAvailable: record.isAvailable !== 'false',
+          isActive: record.isActive !== 'false',
+          images: record.images ? record.images.split('|') : [],
+          specifications: record.specifications ? JSON.parse(record.specifications) : {},
+          createdAt: new Date(),
+          updatedAt: new Date()
+        };
+
+        // Calculate discounted price
+        const discountMultiplier = (100 - productData.baseDiscount - productData.extraDiscount) / 100;
+        productData.discountedPrice = productData.basePrice * discountMultiplier;
+
+        // Auto-create category if it doesn't exist
+        const categoryRef = db.collection('categories').doc(productData.category);
+        const categoryDoc = await categoryRef.get();
+        if (!categoryDoc.exists) {
+          batch.set(categoryRef, {
+            name: productData.category,
+            subcategories: [productData.subcategory].filter(Boolean),
+            createdAt: new Date()
+          });
+        } else if (productData.subcategory && !categoryDoc.data().subcategories.includes(productData.subcategory)) {
+          batch.update(categoryRef, {
+            subcategories: [...categoryDoc.data().subcategories, productData.subcategory]
+          });
+        }
+
+        const productRef = db.collection('products').doc();
+        batch.set(productRef, productData);
+        results.success++;
+      } catch (error) {
+        results.failed++;
+        results.errors.push({ row: record, error: error.message });
+      }
+    }
+
+    await batch.commit();
+
+    // Clean up uploaded file
+    fs.unlinkSync(req.file.path);
+
+    logger.info(`CSV import completed: ${results.success} success, ${results.failed} failed`);
+
+    res.json({
+      success: true,
+      message: 'CSV import completed',
+      data: results
+    });
+  } catch (error) {
+    next(error);
+  }
+};

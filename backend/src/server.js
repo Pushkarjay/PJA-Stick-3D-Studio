@@ -15,6 +15,7 @@ const { generalLimiter } = require('./middleware/rateLimiter');
 const productsRoutes = require('./routes/products.routes');
 const ordersRoutes = require('./routes/orders.routes');
 const adminRoutes = require('./routes/admin.routes');
+const settingsRoutes = require('./routes/settings.routes');
 
 // Initialize Firebase
 require('./services/firebase.service');
@@ -95,6 +96,7 @@ app.get('/health', (req, res) => {
 app.use('/api/products', productsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/settings', settingsRoutes);
 
 // 404 handler
 app.use((req, res) => {

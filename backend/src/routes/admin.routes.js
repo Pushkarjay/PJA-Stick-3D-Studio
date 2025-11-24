@@ -2,6 +2,10 @@ const express = require('express');
 const router = express.Router();
 const { verifyFirebaseToken, verifyAdmin } = require('../middleware/authFirebase');
 const adminController = require('../controllers/admin.controller');
+const multer = require('multer');
+
+// Configure multer for CSV upload
+const upload = multer({ dest: 'uploads/temp/' });
 
 // All admin routes require authentication and admin role
 router.use(verifyFirebaseToken);
@@ -27,5 +31,9 @@ router.put('/orders/:id', adminController.updateOrderStatus);
 // User management
 router.get('/users', adminController.getAllUsers);
 router.put('/users/:id/role', adminController.updateUserRole);
+router.post('/users/create-admin', adminController.createAdminUser);
+
+// CSV Import
+router.post('/import-products', upload.single('file'), adminController.importProductsCSV);
 
 module.exports = router;
