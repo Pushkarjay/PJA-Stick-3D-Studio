@@ -1,23 +1,22 @@
 # Multi-stage build for Node.js backend
 
-# Stage 1: Build stage
+# Stage 1: Build stage with all dependencies
 FROM node:18-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies for native modules (sharp, bcrypt)
+# Install build dependencies for native modules (bcrypt, sharp, etc.)
 RUN apt-get update && apt-get install -y \
     python3 \
     make \
     g++ \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy package files
-COPY package*.json ./
+# Copy package files first for better caching
+COPY package.json package-lock.json ./
 
-# Install dependencies (including dev dependencies for build)
-# Using npm install instead of npm ci since package-lock.json is not in repo
-RUN npm install
+# Install ALL dependencies using npm ci for reproducible builds
+RUN npm ci
 
 # Copy source code
 COPY . .
@@ -28,12 +27,17 @@ FROM node:18-slim
 # Create app directory
 WORKDIR /app
 
-# Install production dependencies only
-COPY package*.json ./
-RUN npm install --only=production
+# Copy package files
+COPY package.json package-lock.json ./
 
-# Copy built application from builder
+# Install ONLY production dependencies
+RUN npm ci --only=production
+
+# Copy source code from builder
 COPY --from=builder /app/src ./src
+
+# Create logs directory
+RUN mkdir -p logs
 
 # Create non-root user
 RUN useradd -r -u 1001 -g root appuser && \
@@ -42,7 +46,7 @@ RUN useradd -r -u 1001 -g root appuser && \
 # Switch to non-root user
 USER appuser
 
-# Expose port
+# Expose port (Cloud Run uses PORT env var, default to 8080)
 EXPOSE 8080
 
 # Health check
