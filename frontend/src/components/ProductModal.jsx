@@ -1,11 +1,35 @@
 import { X, Clock, Package, MessageCircle, ShoppingCart } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCart } from '../hooks/useCart'
 import { openWhatsApp, formatProductMessage } from '../utils/whatsapp'
+import ReviewsModal from './ReviewsModal'
 
-export default function ProductModal({ product, onClose }) {
+
   const [quantity, setQuantity] = useState(1)
   const { addToCart } = useCart()
+  const [showReviews, setShowReviews] = useState(false)
+  const [reviews, setReviews] = useState([])
+  const [loadingReviews, setLoadingReviews] = useState(false)
+
+  useEffect(() => {
+    if (showReviews && product?.id) {
+      fetchReviews()
+    }
+    // eslint-disable-next-line
+  }, [showReviews])
+
+  const fetchReviews = async () => {
+    setLoadingReviews(true)
+    try {
+      const res = await fetch(`/api/reviews/${product.id}`)
+      const data = await res.json()
+      setReviews(data?.data?.reviews || [])
+    } catch (e) {
+      setReviews([])
+    } finally {
+      setLoadingReviews(false)
+    }
+  }
 
   if (!product) return null
 
@@ -178,8 +202,21 @@ export default function ProductModal({ product, onClose }) {
                 )}
               </div>
 
+              {/* Reviews Button */}
+              <div className="flex items-center gap-4 mt-4">
+                <button
+                  onClick={() => setShowReviews(true)}
+                  className="btn btn-outline text-sm px-4 py-2"
+                >
+                  View Reviews
+                </button>
+                {loadingReviews && showReviews && (
+                  <span className="text-xs text-slate-400 ml-2">Loading...</span>
+                )}
+              </div>
+
               {/* Additional Info */}
-              <div className="text-sm text-slate-600 space-y-2">
+              <div className="text-sm text-slate-600 space-y-2 mt-4">
                 <p>✓ Custom designs available</p>
                 <p>✓ Quality guaranteed</p>
                 <p>✓ Fast delivery at Suresh Singh Chowk</p>
@@ -188,6 +225,13 @@ export default function ProductModal({ product, onClose }) {
           </div>
         </div>
       </div>
+      {/* Reviews Modal */}
+      {showReviews && (
+        <ReviewsModal
+          reviews={reviews}
+          onClose={() => setShowReviews(false)}
+        />
+      )}
     </div>
   )
 }

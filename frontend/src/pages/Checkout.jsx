@@ -3,17 +3,17 @@ import { useNavigate } from 'react-router-dom'
 import { ArrowLeft, MessageCircle, CheckCircle2 } from 'lucide-react'
 import NavBar from '../components/NavBar'
 import Footer from '../components/Footer'
+import { useEffect, useState as useState2 } from 'react'
 import { useCart } from '../hooks/useCart'
 import { createOrder } from '../lib/api'
 import { openWhatsApp, formatCheckoutMessage } from '../utils/whatsapp'
 
-export default function Checkout() {
   const navigate = useNavigate()
   const { cartItems, clearCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderId, setOrderId] = useState(null)
-  
+  const [footerSettings, setFooterSettings] = useState2(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,6 +26,28 @@ export default function Checkout() {
   })
 
   const [errors, setErrors] = useState({})
+
+  useEffect(() => {
+    fetchFooterSettings()
+  }, [])
+
+  const fetchFooterSettings = async () => {
+    try {
+      const res = await fetch('/api/settings')
+      const data = await res.json()
+      setFooterSettings({
+        description: data.footerDescription || data.siteTitle || '',
+        socialLinks: data.socialLinks || {},
+        contact: {
+          address: data.contactAddress || 'Suresh Singh Chowk, [Your City]',
+          phone: data.whatsappNumber || '+91 6372362313',
+          email: data.contactEmail || 'info@pja3dstudio.com',
+        },
+      })
+    } catch (e) {
+      setFooterSettings(null)
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -167,7 +189,11 @@ export default function Checkout() {
             </div>
           </div>
         </main>
-        <Footer />
+        <Footer
+          description={footerSettings?.description}
+          socialLinks={footerSettings?.socialLinks}
+          contact={footerSettings?.contact}
+        />
       </div>
     )
   }

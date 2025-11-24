@@ -1,7 +1,19 @@
 import { Link } from 'react-router-dom'
 import { MapPin, Phone, Mail, Facebook, Instagram, MessageCircle } from 'lucide-react'
 
-export default function Footer() {
+export default function Footer({
+  description = 'Custom 3D printing, premium stickers, and professional printing services at Suresh Singh Chowk.',
+  socialLinks = {
+    facebook: 'https://facebook.com',
+    instagram: 'https://instagram.com',
+    whatsapp: 'https://wa.me/916372362313',
+  },
+  contact = {
+    address: 'Suresh Singh Chowk, [Your City]',
+    phone: '+91 6372362313',
+    email: 'info@pja3dstudio.com',
+  },
+}) {
   const currentYear = new Date().getFullYear()
 
   return (
@@ -14,11 +26,11 @@ export default function Footer() {
               PJA<span className="text-primary-600">3D</span>
             </div>
             <p className="text-slate-400 text-sm">
-              Custom 3D printing, premium stickers, and professional printing services at Suresh Singh Chowk.
+              {description}
             </p>
             <div className="flex gap-3">
               <a
-                href="https://facebook.com"
+                href={socialLinks.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -27,7 +39,7 @@ export default function Footer() {
                 <Facebook className="w-5 h-5" />
               </a>
               <a
-                href="https://instagram.com"
+                href={socialLinks.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -36,7 +48,7 @@ export default function Footer() {
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href="https://wa.me/916372362313"
+                href={socialLinks.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -93,18 +105,18 @@ export default function Footer() {
             <ul className="space-y-3 text-slate-400 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span>Suresh Singh Chowk, [Your City]</span>
+                <span>{contact.address}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-5 h-5 flex-shrink-0" />
-                <a href="tel:+916372362313" className="hover:text-primary-600 transition-colors">
-                  +91 6372362313
+                <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="hover:text-primary-600 transition-colors">
+                  {contact.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 flex-shrink-0" />
-                <a href="mailto:info@pja3dstudio.com" className="hover:text-primary-600 transition-colors">
-                  info@pja3dstudio.com
+                <a href={`mailto:${contact.email}`} className="hover:text-primary-600 transition-colors">
+                  {contact.email}
                 </a>
               </li>
             </ul>

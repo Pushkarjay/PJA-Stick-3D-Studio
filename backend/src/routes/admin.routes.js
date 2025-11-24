@@ -36,4 +36,13 @@ router.post('/users/create-admin', adminController.createAdminUser);
 // CSV Import
 router.post('/import-products', upload.single('file'), adminController.importProductsCSV);
 
+// Category management
+router.get('/categories', adminController.getCategories);
+router.post('/categories', adminController.createCategory);
+router.put('/categories/:id', adminController.updateCategory);
+router.delete('/categories/:id', adminController.deleteCategory);
+
+// Settings management
+router.put('/settings', adminController.updateSettings);
+
 module.exports = router;

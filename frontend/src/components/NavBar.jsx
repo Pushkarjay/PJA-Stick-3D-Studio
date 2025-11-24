@@ -24,15 +24,15 @@ export default function NavBar() {
             <Link to="/" className="hover:text-primary-600 transition-colors">
               Home
             </Link>
-            <a href="#products" className="hover:text-primary-600 transition-colors">
+            <Link to="/products" className="hover:text-primary-600 transition-colors">
               Products
-            </a>
-            <a href="#about" className="hover:text-primary-600 transition-colors">
+            </Link>
+            <Link to="/about" className="hover:text-primary-600 transition-colors">
               About
-            </a>
-            <a href="#contact" className="hover:text-primary-600 transition-colors">
+            </Link>
+            <Link to="/contact" className="hover:text-primary-600 transition-colors">
               Contact
-            </a>
+            </Link>
             <Link to="/admin" className="hover:text-primary-600 transition-colors">
               Admin
             </Link>
@@ -76,27 +76,27 @@ export default function NavBar() {
             >
               Home
             </Link>
-            <a
-              href="#products"
+            <Link
+              to="/products"
               className="block py-2 hover:text-primary-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Products
-            </a>
-            <a
-              href="#about"
+            </Link>
+            <Link
+              to="/about"
               className="block py-2 hover:text-primary-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               About
-            </a>
-            <a
-              href="#contact"
+            </Link>
+            <Link
+              to="/contact"
               className="block py-2 hover:text-primary-600 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contact
-            </a>
+            </Link>
             <Link
               to="/admin"
               className="block py-2 hover:text-primary-600 transition-colors"

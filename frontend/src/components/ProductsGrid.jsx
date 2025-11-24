@@ -52,7 +52,6 @@ export default function ProductsGrid({ products, loading, onProductClick }) {
             <ProductCard
               key={product.id}
               product={product}
-              onClick={() => onProductClick(product)}
               style={{ animationDelay: `${index * 0.05}s` }}
             />
           ))}

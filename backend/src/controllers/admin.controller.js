@@ -8,51 +8,66 @@ const { generateSignedUploadUrl } = require('../services/storage.service');
  */
 exports.getDashboard = async (req, res, next) => {
   try {
-    // Get counts
-    const [productsSnap, ordersSnap, usersSnap] = await Promise.all([
-      db.collection('products').where('isActive', '==', true).count().get(),
-      db.collection('orders').count().get(),
-      db.collection('users').count().get()
-    ]);
-
-    // Get recent orders
-    const recentOrdersSnap = await db.collection('orders')
-      .orderBy('createdAt', 'desc')
-      .limit(10)
-      .get();
-
-    const recentOrders = [];
-    recentOrdersSnap.forEach(doc => {
-      recentOrders.push({ id: doc.id, ...doc.data() });
+    // Get all products
+    const productsSnap = await db.collection('products').get();
+    let totalProducts = 0;
+    let activeProducts = 0;
+    
+    productsSnap.forEach(doc => {
+      totalProducts++;
+      if (doc.data().isActive) activeProducts++;
     });
 
-    // Get pending orders
-    const pendingOrdersSnap = await db.collection('orders')
-      .where('status', '==', 'pending')
-      .count()
-      .get();
-
-    // Calculate total revenue
-    const completedOrdersSnap = await db.collection('orders')
-      .where('status', '==', 'delivered')
-      .get();
-
+    // Get all orders
+    const ordersSnap = await db.collection('orders').get();
+    let totalOrders = 0;
+    let pendingOrders = 0;
+    let completedOrders = 0;
     let totalRevenue = 0;
-    completedOrdersSnap.forEach(doc => {
-      totalRevenue += doc.data().pricing.total;
+    const recentOrders = [];
+
+    ordersSnap.forEach(doc => {
+      const order = doc.data();
+      totalOrders++;
+      
+      if (order.status === 'pending') pendingOrders++;
+      if (order.status === 'delivered' || order.status === 'completed') {
+        completedOrders++;
+        // Estimate revenue based on items (since pricing might vary)
+        if (order.items && Array.isArray(order.items)) {
+          order.items.forEach(item => {
+            // Rough estimate: extract base price from price tier
+            const priceMatch = (item.priceTier || '').match(/\d+/g);
+            if (priceMatch && priceMatch.length > 0) {
+              totalRevenue += parseInt(priceMatch[0]) * (item.quantity || 1);
+            }
+          });
+        }
+      }
+      
+      // Collect recent orders
+      if (recentOrders.length < 10) {
+        recentOrders.push({ id: doc.id, ...order });
+      }
+    });
+
+    // Sort recent orders by date
+    recentOrders.sort((a, b) => {
+      const aDate = a.createdAt?.toDate?.() || new Date(a.createdAt);
+      const bDate = b.createdAt?.toDate?.() || new Date(b.createdAt);
+      return bDate - aDate;
     });
 
     res.json({
       success: true,
       data: {
-        stats: {
-          totalProducts: productsSnap.data().count,
-          totalOrders: ordersSnap.data().count,
-          totalUsers: usersSnap.data().count,
-          pendingOrders: pendingOrdersSnap.data().count,
-          totalRevenue
-        },
-        recentOrders
+        totalProducts,
+        activeProducts,
+        totalOrders,
+        pendingOrders,
+        completedOrders,
+        totalRevenue,
+        recentOrders: recentOrders.slice(0, 10)
       }
     });
   } catch (error) {
@@ -530,6 +545,153 @@ exports.importProductsCSV = async (req, res, next) => {
       success: true,
       message: 'CSV import completed',
       data: results
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all categories
+ */
+exports.getCategories = async (req, res, next) => {
+  try {
+    const snapshot = await db.collection('categories').orderBy('name').get();
+    const categories = [];
+    
+    for (const doc of snapshot.docs) {
+      const categoryData = doc.data();
+      // Count products in this category
+      const productCount = await db.collection('products')
+        .where('category', '==', doc.id)
+        .where('isActive', '==', true)
+        .count()
+        .get();
+      
+      categories.push({
+        id: doc.id,
+        ...categoryData,
+        productCount: productCount.data().count
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { categories }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create category
+ */
+exports.createCategory = async (req, res, next) => {
+  try {
+    const { name, slug, description, icon } = req.body;
+
+    if (!name || !slug) {
+      throw new AppError('Name and slug are required', 400, 'VALIDATION_ERROR');
+    }
+
+    // Check if slug already exists
+    const existingSnap = await db.collection('categories').where('slug', '==', slug).get();
+    if (!existingSnap.empty) {
+      throw new AppError('Category slug already exists', 400, 'DUPLICATE_SLUG');
+    }
+
+    const category = {
+      name,
+      slug,
+      description: description || '',
+      icon: icon || '',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    };
+
+    const docRef = await db.collection('categories').add(category);
+
+    logger.info(`Category created: ${name} by ${req.user.email}`);
+
+    res.status(201).json({
+      success: true,
+      data: { id: docRef.id, ...category },
+      message: 'Category created successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update category
+ */
+exports.updateCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body;
+
+    await db.collection('categories').doc(id).update({
+      ...updates,
+      updatedAt: new Date()
+    });
+
+    logger.info(`Category updated: ${id} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Category updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete category
+ */
+exports.deleteCategory = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Check if category has products
+    const productCount = await db.collection('products')
+      .where('category', '==', id)
+      .count()
+      .get();
+
+    if (productCount.data().count > 0) {
+      throw new AppError('Cannot delete category with existing products', 400, 'CATEGORY_HAS_PRODUCTS');
+    }
+
+    await db.collection('categories').doc(id).delete();
+
+    logger.info(`Category deleted: ${id} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Category deleted successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update settings
+ */
+exports.updateSettings = async (req, res, next) => {
+  try {
+    const updates = req.body;
+
+    await db.collection('settings').doc('site').set(updates, { merge: true });
+
+    logger.info(`Settings updated by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Settings updated successfully'
     });
   } catch (error) {
     next(error);

@@ -1,8 +1,10 @@
 import { Clock, Package } from 'lucide-react'
 import { useCart } from '../hooks/useCart'
+import { useNavigate } from 'react-router-dom'
 
-export default function ProductCard({ product, onClick, style }) {
+export default function ProductCard({ product, style }) {
   const { addToCart, isInCart } = useCart()
+  const navigate = useNavigate()
 
   const handleAddToCart = (e) => {
     e.stopPropagation()
@@ -37,16 +39,20 @@ export default function ProductCard({ product, onClick, style }) {
     }
   }
 
+  const handleCardClick = () => {
+    navigate(`/products/${product.id}`)
+  }
+
   return (
     <div
-      onClick={onClick}
+      onClick={handleCardClick}
       className="card cursor-pointer animate-slide-up"
       style={style}
       role="button"
       tabIndex={0}
       onKeyDown={(e) => {
         if (e.key === 'Enter' || e.key === ' ') {
-          onClick()
+          handleCardClick()
         }
       }}
       aria-label={`View details for ${product.name}`}
@@ -65,7 +71,6 @@ export default function ProductCard({ product, onClick, style }) {
             <Package className="w-16 h-16 text-slate-300" />
           </div>
         )}
-        
         {/* Category Badge */}
         {product.category && (
           <div className="absolute top-2 left-2">
@@ -74,13 +79,11 @@ export default function ProductCard({ product, onClick, style }) {
             </span>
           </div>
         )}
-
         {/* Stock Badge */}
         <div className="absolute top-2 right-2">
           {getStockBadge()}
         </div>
       </div>
-
       {/* Product Info */}
       <div className="space-y-3">
         <div>
@@ -93,7 +96,6 @@ export default function ProductCard({ product, onClick, style }) {
             </p>
           )}
         </div>
-
         {/* Price Tier */}
         <div className="flex items-center justify-between">
           <span className="text-lg font-bold text-primary-600">
@@ -105,7 +107,6 @@ export default function ProductCard({ product, onClick, style }) {
             </span>
           )}
         </div>
-
         {/* Production Time */}
         {product.productionTime && (
           <div className="flex items-center text-sm text-slate-600">
@@ -113,7 +114,6 @@ export default function ProductCard({ product, onClick, style }) {
             {product.productionTime}
           </div>
         )}
-
         {/* Actions */}
         <div className="flex gap-2 pt-2">
           <button
@@ -123,13 +123,6 @@ export default function ProductCard({ product, onClick, style }) {
             aria-label={`Add ${product.name} to cart`}
           >
             {isInCart(product.id) ? 'Added' : 'Add to Cart'}
-          </button>
-          <button
-            onClick={onClick}
-            className="btn btn-outline text-sm"
-            aria-label={`View ${product.name} details`}
-          >
-            Details
           </button>
         </div>
       </div>

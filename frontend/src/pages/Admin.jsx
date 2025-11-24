@@ -5,7 +5,14 @@ import { doc, getDoc } from 'firebase/firestore'
 import { LogOut, Plus, Edit, Trash2, Upload, Package } from 'lucide-react'
 import { auth, db } from '../lib/firebaseClient'
 import { getProducts, createProduct, updateProduct, deleteProduct, getUploadUrl, uploadImage, getOrders, updateOrderStatus } from '../lib/api'
+
 import ProductForm from '../components/ProductForm'
+import SettingsPanel from '../components/SettingsPanel'
+import UserManagementPanel from '../components/UserManagementPanel'
+import CSVImportPanel from '../components/CSVImportPanel'
+import CategoryManagement from '../components/CategoryManagement'
+import StatsCounters from '../components/StatsCounters'
+import BillingIframe from '../components/BillingIframe'
 
 export default function Admin() {
   const navigate = useNavigate()
@@ -231,14 +238,71 @@ export default function Admin() {
             >
               Orders
             </button>
+            <button
+              onClick={() => setActiveTab('settings')}
+              className={`py-4 px-2 border-b-2 transition-colors ${
+                activeTab === 'settings'
+                  ? 'border-primary-600 text-primary-600 font-medium'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Settings
+            </button>
+            <button
+              onClick={() => setActiveTab('users')}
+              className={`py-4 px-2 border-b-2 transition-colors ${
+                activeTab === 'users'
+                  ? 'border-primary-600 text-primary-600 font-medium'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              User Management
+            </button>
+            <button
+              onClick={() => setActiveTab('categories')}
+              className={`py-4 px-2 border-b-2 transition-colors ${
+                activeTab === 'categories'
+                  ? 'border-primary-600 text-primary-600 font-medium'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Categories
+            </button>
+            <button
+              onClick={() => setActiveTab('import')}
+              className={`py-4 px-2 border-b-2 transition-colors ${
+                activeTab === 'import'
+                  ? 'border-primary-600 text-primary-600 font-medium'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              CSV Import
+            </button>
+            <button
+              onClick={() => setActiveTab('billing')}
+              className={`py-4 px-2 border-b-2 transition-colors ${
+                activeTab === 'billing'
+                  ? 'border-primary-600 text-primary-600 font-medium'
+                  : 'border-transparent text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Billing
+            </button>
           </div>
         </div>
       </div>
 
       {/* Content */}
+
       <main className="container mx-auto px-4 py-8">
+        {/* Stats Counters - Show on all tabs except import/billing */}
+        {!['import', 'billing'].includes(activeTab) && (
+          <StatsCounters user={user} />
+        )}
+
         {activeTab === 'products' && (
-          <div>
+          // ...existing code for products tab...
+          <>
             <div className="flex items-center justify-between mb-6">
               <h1 className="text-2xl font-bold text-slate-900">Products</h1>
               <button
@@ -252,8 +316,6 @@ export default function Admin() {
                 Add Product
               </button>
             </div>
-
-            {/* Products Table */}
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-200">
@@ -325,13 +387,13 @@ export default function Admin() {
                 </div>
               )}
             </div>
-          </div>
+          </>
         )}
 
         {activeTab === 'orders' && (
-          <div>
+          // ...existing code for orders tab...
+          <>
             <h1 className="text-2xl font-bold text-slate-900 mb-6">Orders</h1>
-            
             <div className="bg-white rounded-xl shadow-lg overflow-hidden">
               <table className="w-full">
                 <thead className="bg-slate-50 border-b border-slate-200">
@@ -375,7 +437,27 @@ export default function Admin() {
                 </div>
               )}
             </div>
-          </div>
+          </>
+        )}
+
+        {activeTab === 'settings' && (
+          <SettingsPanel user={user} />
+        )}
+
+        {activeTab === 'users' && (
+          <UserManagementPanel user={user} />
+        )}
+
+        {activeTab === 'categories' && (
+          <CategoryManagement user={user} />
+        )}
+
+        {activeTab === 'import' && (
+          <CSVImportPanel user={user} onImportComplete={fetchProducts} />
+        )}
+
+        {activeTab === 'billing' && (
+          <BillingIframe user={user} />
         )}
       </main>
 

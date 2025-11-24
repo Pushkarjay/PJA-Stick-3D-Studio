@@ -4,25 +4,45 @@ import Hero from '../components/Hero'
 import StatsBanner from '../components/StatsBanner'
 import FiltersBar from '../components/FiltersBar'
 import ProductsGrid from '../components/ProductsGrid'
-import ProductModal from '../components/ProductModal'
+// import ProductModal from '../components/ProductModal'
 import CartDrawer from '../components/CartDrawer'
 import Footer from '../components/Footer'
 import { getProducts } from '../lib/api'
 
-export default function Home() {
   const [products, setProducts] = useState([])
   const [filteredProducts, setFilteredProducts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [selectedProduct, setSelectedProduct] = useState(null)
+  const [footerSettings, setFooterSettings] = useState(null)
   const [filters, setFilters] = useState({
     category: 'All',
+    difficulty: 'All',
+    sort: 'name_asc',
     search: '',
   })
 
-  // Fetch products on mount
+  // Fetch products and footer settings on mount
   useEffect(() => {
     fetchProducts()
+    fetchFooterSettings()
   }, [])
+  // Fetch footer settings from backend (site settings)
+  const fetchFooterSettings = async () => {
+    try {
+      const res = await fetch('/api/settings')
+      const data = await res.json()
+      setFooterSettings({
+        description: data.footerDescription || data.siteTitle || '',
+        socialLinks: data.socialLinks || {},
+        contact: {
+          address: data.contactAddress || 'Suresh Singh Chowk, [Your City]',
+          phone: data.whatsappNumber || '+91 6372362313',
+          email: data.contactEmail || 'info@pja3dstudio.com',
+        },
+      })
+    } catch (e) {
+      setFooterSettings(null)
+    }
+  }
 
   // Filter products when filters change
   useEffect(() => {
@@ -50,6 +70,11 @@ export default function Home() {
       filtered = filtered.filter(p => p.category === filters.category)
     }
 
+    // Filter by difficulty
+    if (filters.difficulty && filters.difficulty !== 'All') {
+      filtered = filtered.filter(p => (p.difficulty || '').toLowerCase() === filters.difficulty.toLowerCase())
+    }
+
     // Filter by search
     if (filters.search) {
       const searchLower = filters.search.toLowerCase()
@@ -58,6 +83,34 @@ export default function Home() {
         p.description?.toLowerCase().includes(searchLower) ||
         p.category?.toLowerCase().includes(searchLower)
       )
+    }
+
+    // Sorting
+    switch (filters.sort) {
+      case 'name_asc':
+        filtered.sort((a, b) => a.name.localeCompare(b.name))
+        break
+      case 'name_desc':
+        filtered.sort((a, b) => b.name.localeCompare(a.name))
+        break
+      case 'price_asc':
+        filtered.sort((a, b) => {
+          // Extract numeric value from priceTier (e.g., '₹499')
+          const getPrice = p => parseInt((p.priceTier || '').replace(/\D/g, '')) || 0
+          return getPrice(a) - getPrice(b)
+        })
+        break
+      case 'price_desc':
+        filtered.sort((a, b) => {
+          const getPrice = p => parseInt((p.priceTier || '').replace(/\D/g, '')) || 0
+          return getPrice(b) - getPrice(a)
+        })
+        break
+      case 'newest':
+        filtered.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0))
+        break
+      default:
+        break
     }
 
     setFilteredProducts(filtered)
@@ -82,75 +135,38 @@ export default function Home() {
           onFilterChange={handleFilterChange}
           onSearchChange={handleSearchChange}
         />
+        {/* Custom CTA for 3D Print category */}
+        {filters.category === '3D Print' && (
+          <div className="mb-8 bg-primary-100 border-l-4 border-primary-600 rounded-xl p-6 flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold text-primary-700 mb-1">Need a Custom 3D Print?</h3>
+              <p className="text-primary-800">Contact us on WhatsApp for personalized designs, bulk orders, or special requests!</p>
+            </div>
+            <a
+              href="https://wa.me/916372362313"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="btn btn-primary text-base px-6 py-3"
+            >
+              Chat on WhatsApp
+            </a>
+          </div>
+        )}
         <ProductsGrid
           products={filteredProducts}
           loading={loading}
-          onProductClick={setSelectedProduct}
         />
         
-        {/* About Section */}
-        <section id="about" className="py-16 bg-white">
-          <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto text-center">
-              <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">
-                About PJA Stick & 3D Studio
-              </h2>
-              <p className="text-slate-600 mb-6">
-                We are a creative studio specializing in custom 3D printing, premium stickers,
-                and professional printing services. Located at Suresh Singh Chowk, we bring
-                your ideas to life with cutting-edge technology and expert craftsmanship.
-              </p>
-              <p className="text-slate-600">
-                From personalized flip names and moon lamps to divine idols and custom
-                designs, we deliver quality products that exceed expectations. Order today
-                via WhatsApp for fast and convenient service!
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* Contact Section */}
-        <section id="contact" className="py-16 bg-slate-50">
-          <div className="container mx-auto px-4">
-            <div className="max-w-2xl mx-auto text-center">
-              <h2 className="text-3xl font-display font-bold text-slate-900 mb-4">
-                Get in Touch
-              </h2>
-              <p className="text-slate-600 mb-8">
-                Have questions or special requests? We'd love to hear from you!
-              </p>
-              <div className="grid md:grid-cols-2 gap-6">
-                <div className="card text-left">
-                  <h3 className="font-semibold text-lg mb-3">Visit Us</h3>
-                  <p className="text-slate-600">
-                    Suresh Singh Chowk<br />
-                    [Your City, State]<br />
-                    [Pincode]
-                  </p>
-                </div>
-                <div className="card text-left">
-                  <h3 className="font-semibold text-lg mb-3">Contact</h3>
-                  <p className="text-slate-600">
-                    Phone: +91 6372362313<br />
-                    Email: info@pja3dstudio.com<br />
-                    WhatsApp: Available 24/7
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
+        // ...existing code...
       </main>
 
-      <Footer />
+      <Footer
+        description={footerSettings?.description}
+        socialLinks={footerSettings?.socialLinks}
+        contact={footerSettings?.contact}
+      />
 
-      {/* Product Modal */}
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
+      {/* Product Modal removed: now using product pages */}
 
       {/* Cart Drawer */}
       <CartDrawer />
