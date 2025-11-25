@@ -29,3 +29,4 @@ Write-Host "Firebase secrets added successfully!" -ForegroundColor Green
 Write-Host ""
 Write-Host "Note: GCP_SA_KEY and FIREBASE_SERVICE_ACCOUNT should already be configured." -ForegroundColor Cyan
 Write-Host "If not, you need to add them manually with your service account JSON." -ForegroundColor Cyan
+Write-Host ""
