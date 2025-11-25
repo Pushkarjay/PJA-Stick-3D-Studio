@@ -12,7 +12,7 @@ export default function FiltersBar({ filters, onFilterChange, onSearchChange }) 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const { data } = await apiRequest('/dropdowns');
+        const { data } = await apiRequest('/api/dropdowns');
         setCategories(['All', ...(data.category?.values || [])]);
         setMaterials(['All', ...(data.material?.values || [])]);
         setThemes(['All', ...(data.theme?.values || [])]);

@@ -14,7 +14,7 @@ const DropdownCard = ({ fieldName, dropdown, fetchDropdowns }) => {
         setIsAdding(true);
         const toastId = toast.loading(`Adding "${newValue}" to ${fieldName}...`);
         try {
-            await apiRequest(`/dropdowns/${fieldName}`, {
+            await apiRequest(`/api/dropdowns/${fieldName}`, {
                 method: 'PUT',
                 body: JSON.stringify({ value: newValue.trim() }),
             });
@@ -34,7 +34,7 @@ const DropdownCard = ({ fieldName, dropdown, fetchDropdowns }) => {
 
         const toastId = toast.loading(`Deleting "${valueToDelete}"...`);
         try {
-            await apiRequest(`/dropdowns/${fieldName}/value`, {
+            await apiRequest(`/api/dropdowns/${fieldName}/value`, {
                 method: 'DELETE',
                 body: JSON.stringify({ value: valueToDelete }),
             });
@@ -51,7 +51,7 @@ const DropdownCard = ({ fieldName, dropdown, fetchDropdowns }) => {
 
         const toastId = toast.loading(`Deleting dropdown "${fieldName}"...`);
         try {
-            await apiRequest(`/dropdowns/${fieldName}`, { method: 'DELETE' });
+            await apiRequest(`/api/dropdowns/${fieldName}`, { method: 'DELETE' });
             toast.success(`Dropdown "${fieldName}" deleted.`, { id: toastId });
             fetchDropdowns();
         } catch (error) {
@@ -120,7 +120,7 @@ const CreateDropdownForm = ({ fetchDropdowns }) => {
         setIsCreating(true);
         const toastId = toast.loading(`Creating dropdown "${camelCaseFieldName}"...`);
         try {
-            await apiRequest('/dropdowns', {
+            await apiRequest('/api/dropdowns', {
                 method: 'POST',
                 body: JSON.stringify({ fieldName: camelCaseFieldName, values: [] }),
             });
@@ -163,7 +163,7 @@ export default function DropdownManagement() {
     const fetchDropdowns = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await apiRequest('/dropdowns');
+            const { data } = await apiRequest('/api/dropdowns');
             setDropdowns(data || {});
         } catch (error) {
             console.error('Failed to fetch dropdowns:', error);

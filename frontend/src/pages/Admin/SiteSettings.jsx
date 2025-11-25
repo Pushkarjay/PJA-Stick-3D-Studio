@@ -49,7 +49,7 @@ export default function SiteSettings() {
   const fetchSettings = useCallback(async () => {
     setLoading(true);
     try {
-      const { data } = await apiRequest('/settings/admin');
+      const { data } = await apiRequest('/api/settings/admin');
       setSettings(data || {});
     } catch (error) {
       toast.error('Failed to load site settings.');
@@ -86,7 +86,7 @@ export default function SiteSettings() {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiRequest('/settings/admin', {
+      await apiRequest('/api/settings/admin', {
         method: 'PUT',
         body: JSON.stringify(settings),
       });

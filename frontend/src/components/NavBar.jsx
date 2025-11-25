@@ -40,7 +40,7 @@ export default function NavBar() {
   useEffect(() => {
     const fetchCategories = async () => {
       try {
-        const { data } = await apiRequest('/dropdowns');
+        const { data } = await apiRequest('/api/dropdowns');
         if (data.category && data.category.values) {
           setProductCategories(data.category.values);
         }

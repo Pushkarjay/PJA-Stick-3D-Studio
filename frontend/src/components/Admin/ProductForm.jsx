@@ -69,7 +69,7 @@ export default function ProductForm({ product, onClose, onSave, user }) {
 
   const fetchDropdowns = useCallback(async () => {
     try {
-      const { data } = await apiRequest('/dropdowns');
+      const { data } = await apiRequest('/api/dropdowns');
       setDropdownOptions(prev => ({
         ...prev,
         ...Object.keys(prev).reduce((acc, key) => {

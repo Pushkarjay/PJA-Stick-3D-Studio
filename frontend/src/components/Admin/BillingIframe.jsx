@@ -12,7 +12,7 @@ export default function BillingIframe() {
     setLoading(true);
     setError(null);
     try {
-      const { data } = await apiRequest('/settings');
+      const { data } = await apiRequest('/api/settings/admin');
       const url = data?.billing?.url;
       if (url) {
         setBillingUrl(url);

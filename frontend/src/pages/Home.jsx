@@ -45,7 +45,7 @@ export default function Home() {
   useEffect(() => {
     const fetchSiteSettings = async () => {
       try {
-        const settings = await apiRequest('/settings/public');
+        const settings = await apiRequest('/api/settings');
         setSiteSettings(settings);
       } catch (error) {
         console.error('Error fetching site settings:', error);
