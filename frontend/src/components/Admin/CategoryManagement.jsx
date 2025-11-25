@@ -13,9 +13,11 @@ export default function CategoryManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
 
   const fetchCategories = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const data = await apiRequest('/categories');
+      const token = await user.getIdToken();
+      const data = await apiRequest('/api/categories', {}, token);
       setCategories(data);
     } catch (error) {
       toast.error(`Failed to fetch categories: ${error.message}`);
@@ -40,7 +42,11 @@ export default function CategoryManagement() {
 
     const toastId = toast.loading('Creating category...');
     try {
-      await apiRequest('/categories', 'POST', newCategory);
+      const token = await user.getIdToken();
+      await apiRequest('/api/categories', {
+        method: 'POST',
+        body: JSON.stringify(newCategory)
+      }, token);
       toast.success('Category created successfully', { id: toastId });
       setNewCategory({ name: '', slug: '', description: '', icon: '' });
       setShowAddForm(false);
@@ -58,7 +64,11 @@ export default function CategoryManagement() {
     try {
       // Only send the fields that can be updated
       const { id, name, description, icon, slug } = editingCategory;
-      await apiRequest(`/categories/${id}`, 'PUT', { name, description, icon, slug });
+      const token = await user.getIdToken();
+      await apiRequest(`/api/categories/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify({ name, description, icon, slug })
+      }, token);
       toast.success('Category updated successfully', { id: toastId });
       setEditingCategory(null);
       fetchCategories(); // Refreshes the list with updated data
@@ -73,7 +83,8 @@ export default function CategoryManagement() {
 
     const toastId = toast.loading('Deleting category...');
     try {
-      await apiRequest(`/categories/${id}`, 'DELETE');
+      const token = await user.getIdToken();
+      await apiRequest(`/api/categories/${id}`, { method: 'DELETE' }, token);
       toast.success('Category deleted successfully', { id: toastId });
       fetchCategories();
     } catch (error) {

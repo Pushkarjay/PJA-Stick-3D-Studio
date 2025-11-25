@@ -16,9 +16,11 @@ export default function StatsCounters() {
   const [loading, setLoading] = useState(true);
 
   const fetchStats = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const data = await apiRequest('/admin/dashboard');
+      const token = await user.getIdToken();
+      const data = await apiRequest('/api/admin/dashboard', {}, token);
       setStats(prevStats => ({ ...prevStats, ...data }));
     } catch (error) {
       console.error('Error fetching stats:', error);

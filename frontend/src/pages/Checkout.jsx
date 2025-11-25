@@ -107,7 +107,7 @@ export default function Checkout() {
         notes: formData.notes,
       }
 
-      const response = await apiRequest('/orders', { 
+      const response = await apiRequest('/api/orders', { 
         method: 'POST',
         body: JSON.stringify(orderData) 
       });

@@ -18,7 +18,7 @@ export default function ReviewForm({ productId, onReviewSubmitted }) {
     }
     setIsSubmitting(true);
     try {
-      await apiRequest('/reviews', {
+      await apiRequest('/api/reviews', {
         method: 'POST',
         body: JSON.stringify({
           productId,

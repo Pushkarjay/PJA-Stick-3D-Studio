@@ -23,30 +23,22 @@ import ProductPage from './pages/ProductPage'
 
 import Products from './pages/Products';
 
-function AdminRoutes() {
-  const { isAdmin } = useAuth();
+function ProtectedAdminRoute({ children }) {
+  const { isAdmin, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-slate-50">
+        <div className="spinner"></div>
+      </div>
+    );
+  }
 
   if (!isAdmin) {
     return <Navigate to="/admin/login" replace />;
   }
 
-  return (
-    <AdminLayout>
-      <Routes>
-        <Route path="dashboard" element={<Dashboard />} />
-        <Route path="products" element={<ProductManagement />} />
-        <Route path="orders" element={<OrderManagement />} />
-        <Route path="users" element={<UserManagementPage />} />
-        <Route path="reviews" element={<ReviewManagementPage />} />
-        <Route path="content/categories" element={<CategoryManagementPage />} />
-        <Route path="content/dropdowns" element={<DropdownManagementPage />} />
-        <Route path="settings" element={<SiteSettings />} />
-        <Route path="import" element={<ImportPage />} />
-        <Route path="billing" element={<BillingPage />} />
-        <Route index element={<Navigate to="dashboard" replace />} />
-      </Routes>
-    </AdminLayout>
-  );
+  return children;
 }
 
 function App() {
@@ -62,7 +54,23 @@ function App() {
             <Route path="/products/:id" element={<ProductPage />} />
             <Route path="/checkout" element={<Checkout />} />
             <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin/*" element={<AdminRoutes />} />
+            <Route path="/admin" element={
+              <ProtectedAdminRoute>
+                <AdminLayout />
+              </ProtectedAdminRoute>
+            }>
+              <Route index element={<Navigate to="dashboard" replace />} />
+              <Route path="dashboard" element={<Dashboard />} />
+              <Route path="products" element={<ProductManagement />} />
+              <Route path="orders" element={<OrderManagement />} />
+              <Route path="users" element={<UserManagementPage />} />
+              <Route path="reviews" element={<ReviewManagementPage />} />
+              <Route path="content/categories" element={<CategoryManagementPage />} />
+              <Route path="content/dropdowns" element={<DropdownManagementPage />} />
+              <Route path="settings" element={<SiteSettings />} />
+              <Route path="import" element={<ImportPage />} />
+              <Route path="billing" element={<BillingPage />} />
+            </Route>
           </Routes>
         </Router>
       </CartProvider>

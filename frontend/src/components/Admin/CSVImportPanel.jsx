@@ -1,9 +1,11 @@
 import { useState } from 'react';
 import { Upload, CheckCircle, XCircle, Download } from 'lucide-react';
 import { apiRequest } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 export default function CSVImportPanel() {
+  const { user } = useAuth();
   const [file, setFile] = useState(null);
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState(null);
@@ -34,8 +36,12 @@ export default function CSVImportPanel() {
     try {
       const formData = new FormData();
       formData.append('file', file);
+      const token = await user.getIdToken();
 
-      const data = await apiRequest('/import/products-csv', 'POST', formData, true); // true for formData
+      const data = await apiRequest('/api/import/products-csv', {
+        method: 'POST',
+        body: formData
+      }, token);
       
       setResult(data);
       toast.success(`Import complete! ${data.success} successful, ${data.failed} failed.`, { id: toastId });
