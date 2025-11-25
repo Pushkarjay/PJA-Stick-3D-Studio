@@ -7,6 +7,7 @@ const cors = require('cors');
 const compression = require('compression');
 const morgan = require('morgan');
 const config = require('./config');
+const { initializeConfig } = require('./config');
 const { logger } = require('./utils/logger');
 const errorHandler = require('./middleware/errorHandler');
 const { generalLimiter } = require('./middleware/rateLimiter');
@@ -125,14 +126,26 @@ app.use((req, res) => {
 // Error handling middleware (must be last)
 app.use(errorHandler);
 
-// Start server
-const PORT = process.env.PORT || config.port || 8080;
-app.listen(PORT, '0.0.0.0', () => {
-  logger.info(`🚀 Server running on port ${PORT}`);
-  logger.info(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
-  logger.info(`🌐 CORS enabled`);
-  logger.info(`📱 WhatsApp: ${process.env.WHATSAPP_NUMBER || 'Not configured'}`);
-});
+// Start server with async initialization
+async function startServer() {
+  try {
+    // Initialize configuration (load secrets, etc.)
+    await initializeConfig();
+    
+    const PORT = process.env.PORT || config.port || 8080;
+    app.listen(PORT, '0.0.0.0', () => {
+      logger.info(`🚀 Server running on port ${PORT}`);
+      logger.info(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🌐 CORS enabled`);
+      logger.info(`📱 WhatsApp: ${process.env.WHATSAPP_NUMBER || 'Not configured'}`);
+    });
+  } catch (error) {
+    logger.error('Failed to start server:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
