@@ -21,10 +21,8 @@ export default function AdminLogin() {
     setLoginError('')
     try {
       await login(email, password)
-      // Wait a moment for auth state to update, then navigate
-      setTimeout(() => {
-        navigate('/admin/dashboard')
-      }, 500)
+      // Force immediate redirect - the AdminLayout will handle auth check
+      window.location.href = '/admin/dashboard'
     } catch (error) {
       setLoginError(error.message)
     }
