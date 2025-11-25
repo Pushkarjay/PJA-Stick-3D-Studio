@@ -1,14 +1,14 @@
 const express = require('express');
 const router = express.Router();
-const { verifyToken, requireAdmin } = require('../middleware/auth');
+const { verifyFirebaseToken, verifyAdmin } = require('../middleware/authFirebase');
 const orderController = require('../controllers/orders.controller');
 
 // All routes in this file require a valid token
-router.use(verifyToken);
+router.use(verifyFirebaseToken);
 
 // Admin routes
-router.get('/', requireAdmin, orderController.getAllOrders);
-router.put('/:id/status', requireAdmin, orderController.updateOrderStatus);
+router.get('/', verifyAdmin, orderController.getAllOrders);
+router.put('/:id/status', verifyAdmin, orderController.updateOrderStatus);
 
 // User-specific routes
 router.get('/user', orderController.getUserOrders); 
