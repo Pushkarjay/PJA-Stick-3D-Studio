@@ -1,5 +1,14 @@
 {
   "projects": {
     "default": "pja3d-fire"
+  },
+  "targets": {
+    "pja3d-fire": {
+      "hosting": {
+        "pja3d-frontend": [
+          "pja3d-fire"
+        ]
+      }
+    }
   }
 }
