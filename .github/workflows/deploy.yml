@@ -21,45 +21,43 @@ jobs:
     - name: Checkout code
       uses: actions/checkout@v4
 
-    #---------------------------------
-    # Backend Setup & Test
-    #---------------------------------
-    - name: Setup Node.js for Backend
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
         node-version: '20'
         cache: 'npm'
-        cache-dependency-path: ./backend/package-lock.json
 
+    #---------------------------------
+    # Backend Setup & Test
+    #---------------------------------
     - name: Install backend dependencies
-      run: npm install --prefix backend
+      run: npm install
+      working-directory: ./backend
 
     - name: Run backend tests
-      run: npm test --prefix backend -- --if-present
+      run: npm test
+      working-directory: ./backend
 
     - name: Lint backend code
-      run: npm run lint --prefix backend -- --if-present
+      run: npm run lint
+      working-directory: ./backend
 
     #---------------------------------
     # Frontend Setup & Test
     #---------------------------------
-    - name: Setup Node.js for Frontend
-      uses: actions/setup-node@v4
-      with:
-        node-version: '20'
-        cache: 'npm'
-        cache-dependency-path: ./frontend/package-lock.json
-
     - name: Install frontend dependencies
-      run: npm install --prefix frontend
+      run: npm install
+      working-directory: ./frontend
 
     - name: Build frontend
-      run: npm run build --prefix frontend
+      run: npm run build
+      working-directory: ./frontend
       env:
         VITE_API_URL: "https://pja3d-backend-test-url.com" # Dummy URL for build step
 
     - name: Run frontend tests
-      run: npm test --prefix frontend -- --if-present
+      run: npm test
+      working-directory: ./frontend
 
   deploy-backend:
     runs-on: ubuntu-latest
