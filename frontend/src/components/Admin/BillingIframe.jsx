@@ -1,18 +1,22 @@
 import { useState, useEffect, useCallback } from 'react';
 import { ExternalLink, Save, AlertTriangle, Loader } from 'lucide-react';
 import { apiRequest } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 
 export default function BillingIframe() {
+  const { user } = useAuth();
   const [billingUrl, setBillingUrl] = useState('');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   const fetchBillingUrl = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     setError(null);
     try {
-      const { data } = await apiRequest('/api/settings/admin');
+      const token = await user.getIdToken();
+      const { data } = await apiRequest('/api/settings/admin', {}, token);
       const url = data?.billing?.url;
       if (url) {
         setBillingUrl(url);
@@ -26,7 +30,7 @@ export default function BillingIframe() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchBillingUrl();

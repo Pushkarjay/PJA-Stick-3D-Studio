@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
 import { Save, Loader, Image as ImageIcon, Info } from 'lucide-react';
 
@@ -42,14 +43,17 @@ const TextArea = ({ label, name, value, onChange, placeholder, rows = 3 }) => (
   );
 
 export default function SiteSettings() {
+  const { user } = useAuth();
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
   const fetchSettings = useCallback(async () => {
+    if (!user) return;
     setLoading(true);
     try {
-      const { data } = await apiRequest('/api/settings/admin');
+      const token = await user.getIdToken();
+      const { data } = await apiRequest('/api/settings/admin', {}, token);
       setSettings(data || {});
     } catch (error) {
       toast.error('Failed to load site settings.');
@@ -57,7 +61,7 @@ export default function SiteSettings() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
     fetchSettings();
@@ -84,12 +88,14 @@ export default function SiteSettings() {
   };
 
   const handleSave = async () => {
+    if (!user) return;
     setSaving(true);
     try {
+      const token = await user.getIdToken();
       await apiRequest('/api/settings/admin', {
         method: 'PUT',
         body: JSON.stringify(settings),
-      });
+      }, token);
       toast.success('Settings saved successfully!');
     } catch (error) {
       toast.error('Failed to save settings.');
