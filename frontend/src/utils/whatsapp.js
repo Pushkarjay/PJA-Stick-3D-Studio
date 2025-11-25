@@ -93,6 +93,37 @@ export function openWhatsApp(message, number) {
 }
 
 /**
+ * Format cart items for WhatsApp message
+ * @param {array} cartItems - Array of cart items
+ * @param {number} subtotal - Subtotal amount
+ * @param {number} tax - Tax amount
+ * @param {number} shipping - Shipping cost
+ * @param {number} total - Total amount
+ * @returns {string} - Formatted message
+ */
+export function formatCartForWhatsApp(cartItems, subtotal, tax, shipping, total) {
+  const itemsList = cartItems
+    .map((item, index) => {
+      return `${index + 1}. *${item.name || item.product?.name}*
+   Qty: ${item.quantity} | Price: ₹${item.price || item.product?.price || 0}`
+    })
+    .join('\n\n')
+
+  return `Hi! I'd like to order these items:
+
+*Items:*
+${itemsList}
+
+*Order Summary:*
+💰 Subtotal: ₹${subtotal.toFixed(2)}
+📊 Tax (5%): ₹${tax.toFixed(2)}
+🚚 Shipping: ₹${shipping.toFixed(2)}
+*💵 Total: ₹${total.toFixed(2)}*
+
+Please confirm the order and share payment details. Thank you!`
+}
+
+/**
  * Validate WhatsApp number format
  * @param {string} number - Phone number to validate
  * @returns {boolean}
@@ -110,6 +141,7 @@ export default {
   formatProductMessage,
   formatCheckoutMessage,
   formatInquiryMessage,
+  formatCartForWhatsApp,
   openWhatsApp,
   validateWhatsAppNumber,
 }

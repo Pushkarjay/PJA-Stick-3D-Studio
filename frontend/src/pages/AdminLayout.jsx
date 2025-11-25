@@ -1,7 +1,7 @@
 import { Outlet } from 'react-router-dom'
-import AdminSidebar from '../../components/Admin/AdminSidebar'
-import AdminHeader from '../../components/Admin/AdminHeader'
-import { useAuth } from '../../hooks/useAuth'
+import AdminSidebar from '../components/Admin/AdminSidebar'
+import AdminHeader from '../components/Admin/AdminHeader'
+import { useAuth } from '../hooks/useAuth'
 import AdminLogin from './Admin/AdminLogin'
 
 export default function AdminLayout() {

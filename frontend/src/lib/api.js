@@ -9,7 +9,7 @@ const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080'
  * @param {object} options - Fetch options
  * @param {string} token - Firebase ID token (optional, for admin routes)
  */
-async function apiRequest(endpoint, options = {}, token = null) {
+export async function apiRequest(endpoint, options = {}, token = null) {
   const headers = {
     'Content-Type': 'application/json',
     ...options.headers,

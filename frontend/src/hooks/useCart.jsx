@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { CartContext } from './CartContext';
 
+// Re-export useCart hook from CartContext
+export { useCart } from './CartContext';
+
 /**
  * Cart Provider Component
  * Manages cart state with localStorage persistence
