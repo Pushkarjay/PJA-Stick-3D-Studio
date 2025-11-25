@@ -50,6 +50,13 @@ firebase-adminsdk.json
 backend/.env.admin
 **/credentials.json
 **/secrets.json
+**/add-github-secrets.ps1
+**/setup-secrets.*
+**/*secret*.sh
+**/*secret*.ps1
+**/*key*.json
+!package-lock.json
+!yarn.lock
 
 # OS
 Thumbs.db
