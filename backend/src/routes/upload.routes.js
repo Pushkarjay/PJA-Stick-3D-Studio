@@ -1,12 +1,12 @@
 const express = require('express');
 const multer = require('multer');
 const { uploadProductImage, deleteProductImage, generateUploadUrl } = require('../controllers/upload.controller');
-const { requireAdmin } = require('../middleware/authFirebase');
+const { verifyFirebaseToken, verifyAdmin } = require('../middleware/authFirebase');
 
 const router = express.Router();
 
 // All routes in this file should be protected
-router.use(requireAdmin);
+router.use(verifyFirebaseToken, verifyAdmin);
 
 // Configure multer for memory storage
 const upload = multer({
