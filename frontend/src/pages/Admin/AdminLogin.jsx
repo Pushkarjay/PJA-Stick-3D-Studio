@@ -1,20 +1,30 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 
 export default function AdminLogin() {
   const navigate = useNavigate()
-  const { login, loading } = useAuth()
+  const { login, loading, user, isAdmin } = useAuth()
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loginError, setLoginError] = useState('')
+
+  // Redirect to admin dashboard if already logged in as admin
+  useEffect(() => {
+    if (user && isAdmin) {
+      navigate('/admin/dashboard')
+    }
+  }, [user, isAdmin, navigate])
 
   const handleLogin = async (e) => {
     e.preventDefault()
     setLoginError('')
     try {
       await login(email, password)
-      // The useAuth hook will redirect to /admin on successful login if isAdmin is true
+      // Wait a moment for auth state to update, then navigate
+      setTimeout(() => {
+        navigate('/admin/dashboard')
+      }, 500)
     } catch (error) {
       setLoginError(error.message)
     }
