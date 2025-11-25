@@ -1,74 +1,325 @@
 const { db } = require('../services/firebase.service');
-const { sendOrderNotification } = require('../services/whatsapp.service');
+const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
 /**
- * Generate unique order number
- * Format: ORD-YYYYMMDD-XXXX
+ * Generate order number
  */
-const generateOrderNumber = () => {
+function generateOrderNumber() {
   const date = new Date();
   const dateStr = date.toISOString().slice(0, 10).replace(/-/g, '');
-  const random = Math.random().toString(36).substring(2, 6).toUpperCase();
-  return `ORD-${dateStr}-${random}`;
-};
+  const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  return `PJA-${dateStr}-${random}`;
+}
 
 /**
- * Create a new order
- * POST /api/orders
+ * Create new order
  */
-const createOrder = async (req, res, next) => {
+exports.createOrder = async (req, res, next) => {
   try {
-    const orderData = req.validatedData;
+    const { uid, email } = req.user;
+    const { items, shippingAddress, paymentMethod, notes } = req.body;
 
-    // Calculate total items
-    const totalItems = orderData.items.reduce((sum, item) => sum + item.quantity, 0);
+    // Validate items
+    if (!items || items.length === 0) {
+      throw new AppError('Cart is empty', 400, 'EMPTY_CART');
+    }
 
-    // Generate order number
-    const orderNumber = generateOrderNumber();
+    // Calculate pricing
+    let subtotal = 0;
+    const orderItems = await Promise.all(
+      items.map(async (item) => {
+        const productDoc = await db.collection('products').doc(item.productId).get();
+        if (!productDoc.exists) {
+          throw new AppError(`Product ${item.productId} not found`, 404, 'PRODUCT_NOT_FOUND');
+        }
 
-    // Create order object
-    const order = {
-      orderNumber,
-      customerName: orderData.customerName,
-      customerEmail: orderData.customerEmail,
-      customerPhone: orderData.customerPhone,
-      items: orderData.items,
-      totalItems,
+        const productData = productDoc.data();
+        const itemSubtotal = productData.price * item.quantity;
+        subtotal += itemSubtotal;
+
+        return {
+          productId: item.productId,
+          productName: productData.name,
+          quantity: item.quantity,
+          price: productData.price,
+          subtotal: itemSubtotal
+        };
+      })
+    );
+
+    const tax = subtotal * 0.18; // 18% GST
+    const shipping = subtotal > 500 ? 0 : 50;
+    const total = subtotal + tax + shipping;
+
+    // Create order
+    const orderData = {
+      orderNumber: generateOrderNumber(),
+      customerId: uid,
+      customerEmail: email,
+      items: orderItems,
+      pricing: {
+        subtotal,
+        tax,
+        shipping,
+        discount: 0,
+        total
+      },
+      shippingAddress,
+      payment: {
+        method: paymentMethod,
+        status: 'pending',
+        transactionId: null,
+        paidAt: null
+      },
       status: 'pending',
-      notes: orderData.notes || '',
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      timeline: [
+        {
+          status: 'pending',
+          timestamp: new Date(),
+          note: 'Order created'
+        }
+      ],
+      notes: notes || '',
+      adminNotes: '',
+      estimatedDelivery: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), // 7 days
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    // Save to Firestore
-    const docRef = await db.collection('orders').add(order);
+    const orderRef = await db.collection('orders').add(orderData);
 
-    logger.info(`Order created: ${orderNumber} (${docRef.id})`);
+    // Clear cart after order creation
+    await db.collection('cart').doc(uid).delete();
 
-    // Send WhatsApp notification (async, don't wait)
-    sendOrderNotification({
-      ...order,
-      id: docRef.id,
-    }).catch((error) => {
-      logger.error('Failed to send WhatsApp notification:', error);
-      // Don't fail the order creation if notification fails
-    });
+    logger.info(`Order created: ${orderData.orderNumber} by ${email}`);
 
     res.status(201).json({
       success: true,
       data: {
-        id: docRef.id,
-        ...order,
+        orderId: orderRef.id,
+        orderNumber: orderData.orderNumber,
+        total
       },
-      message: 'Order created successfully',
+      message: 'Order created successfully'
     });
   } catch (error) {
-    logger.error('Error creating order:', error);
     next(error);
   }
 };
 
-module.exports = {
-  createOrder,
+/**
+ * Get user orders
+ */
+exports.getUserOrders = async (req, res, next) => {
+  try {
+    const { uid } = req.user;
+
+    const snapshot = await db.collection('orders')
+      .where('customerId', '==', uid)
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    res.json({
+      success: true,
+      data: { orders }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get order by ID
+ */
+exports.getOrderById = async (req, res, next) => {
+  try {
+    const { uid } = req.user;
+    const { id } = req.params;
+
+    const doc = await db.collection('orders').doc(id).get();
+
+    if (!doc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+
+    const orderData = doc.data();
+
+    // Verify order belongs to user (unless admin)
+    if (orderData.customerId !== uid && req.user.role !== 'admin') {
+      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+    }
+
+    res.json({
+      success: true,
+      data: {
+        id: doc.id,
+        ...orderData
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Cancel order
+ */
+exports.cancelOrder = async (req, res, next) => {
+  try {
+    const { uid } = req.user;
+    const { id } = req.params;
+
+    const orderRef = db.collection('orders').doc(id);
+    const doc = await orderRef.get();
+
+    if (!doc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+
+    const orderData = doc.data();
+
+    // Verify ownership
+    if (orderData.customerId !== uid) {
+      throw new AppError('Unauthorized', 403, 'FORBIDDEN');
+    }
+
+    // Check if order can be cancelled (only pending/confirmed)
+    if (!['pending', 'confirmed'].includes(orderData.status)) {
+      throw new AppError('Order cannot be cancelled', 400, 'CANNOT_CANCEL');
+    }
+
+    // Update order status
+    await orderRef.update({
+      status: 'cancelled',
+      timeline: [
+        ...orderData.timeline,
+        {
+          status: 'cancelled',
+          timestamp: new Date(),
+          note: 'Cancelled by customer'
+        }
+      ],
+      updatedAt: new Date()
+    });
+
+    logger.info(`Order cancelled: ${orderData.orderNumber}`);
+
+    res.json({
+      success: true,
+      message: 'Order cancelled successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Track order
+ */
+exports.trackOrder = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    const doc = await db.collection('orders').doc(id).get();
+
+    if (!doc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+
+    const orderData = doc.data();
+
+    res.json({
+      success: true,
+      data: {
+        orderNumber: orderData.orderNumber,
+        status: orderData.status,
+        timeline: orderData.timeline,
+        estimatedDelivery: orderData.estimatedDelivery
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Get all orders (Admin)
+ */
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const snapshot = await db.collection('orders')
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update order status (Admin)
+ */
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, note } = req.body;
+    const { name } = req.user; // Admin's name
+
+    const validStatuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled', 'on-hold'];
+    if (!validStatuses.includes(status)) {
+      throw new AppError('Invalid status provided', 400, 'INVALID_STATUS');
+    }
+
+    const orderRef = db.collection('orders').doc(id);
+    const doc = await orderRef.get();
+
+    if (!doc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+    
+    const orderData = doc.data();
+
+    await orderRef.update({
+      status: status,
+      timeline: [
+        ...orderData.timeline,
+        {
+          status: status,
+          timestamp: new Date(),
+          note: note || `Status updated by admin: ${name}`
+        }
+      ],
+      updatedAt: new Date()
+    });
+
+    logger.info(`Order status updated for ${orderData.orderNumber} to ${status}`);
+
+    res.json({
+      success: true,
+      message: 'Order status updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
 };

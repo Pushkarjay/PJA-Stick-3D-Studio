@@ -3,7 +3,7 @@ const { logger } = require('../utils/logger');
 /**
  * Global error handling middleware
  */
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res, _next) {
   logger.error('Error:', {
     message: err.message,
     stack: err.stack,

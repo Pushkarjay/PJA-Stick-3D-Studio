@@ -1,7 +1,10 @@
-import { useState, useEffect } from 'react'
-import { TrendingUp, Package, ShoppingCart, DollarSign } from 'lucide-react'
+import { useState, useEffect, useCallback } from 'react';
+import { TrendingUp, Package, ShoppingCart, DollarSign } from 'lucide-react';
+import { apiRequest } from '../../lib/api';
+import { useAuth } from '../../hooks/useAuth';
 
-export default function StatsCounters({ user }) {
+export default function StatsCounters() {
+  const { user } = useAuth();
   const [stats, setStats] = useState({
     totalProducts: 0,
     totalOrders: 0,
@@ -9,34 +12,27 @@ export default function StatsCounters({ user }) {
     totalRevenue: 0,
     activeProducts: 0,
     completedOrders: 0
-  })
-  const [loading, setLoading] = useState(false)
+  });
+  const [loading, setLoading] = useState(true);
+
+  const fetchStats = useCallback(async () => {
+    setLoading(true);
+    try {
+      const data = await apiRequest('/admin/dashboard');
+      setStats(prevStats => ({ ...prevStats, ...data }));
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (user) {
-      fetchStats()
+      fetchStats();
     }
-  }, [user])
+  }, [user, fetchStats]);
 
-  const fetchStats = async () => {
-    setLoading(true)
-    try {
-      const token = await user.getIdToken()
-      const res = await fetch('/api/admin/dashboard', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      })
-      const data = await res.json()
-      if (data.success) {
-        setStats(data.data || stats)
-      }
-    } catch (error) {
-      console.error('Error fetching stats:', error)
-    } finally {
-      setLoading(false)
-    }
-  }
 
   const statCards = [
     {

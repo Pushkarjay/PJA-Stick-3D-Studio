@@ -1,7 +1,6 @@
 const jwt = require('jsonwebtoken');
 const { admin } = require('../services/firebase.service');
 const { AppError } = require('./errorHandler');
-const { logger } = require('../utils/logger');
 
 /**
  * Verify JWT token middleware

@@ -16,6 +16,14 @@ const productsRoutes = require('./routes/products.routes');
 const ordersRoutes = require('./routes/orders.routes');
 const adminRoutes = require('./routes/admin.routes');
 const settingsRoutes = require('./routes/settings.routes');
+const authRoutes = require('./routes/auth.routes');
+const cartRoutes = require('./routes/cart.routes');
+const reviewRoutes = require('./routes/review.routes');
+const categoryRoutes = require('./routes/category.routes');
+const usersRoutes = require('./routes/users.routes');
+const importRoutes = require('./routes/import.routes');
+const uploadRoutes = require('./routes/upload.routes');
+const dropdownRoutes = require('./routes/dropdown.routes');
 
 // Initialize Firebase
 require('./services/firebase.service');
@@ -97,6 +105,14 @@ app.use('/api/products', productsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/settings', settingsRoutes);
+app.use('/api/auth', authRoutes);
+app.use('/api/cart', cartRoutes);
+app.use('/api/reviews', reviewRoutes);
+app.use('/api/categories', categoryRoutes);
+app.use('/api/users', usersRoutes);
+app.use('/api/import', importRoutes);
+app.use('/api/upload', uploadRoutes);
+app.use('/api/dropdowns', dropdownRoutes);
 
 // 404 handler
 app.use((req, res) => {

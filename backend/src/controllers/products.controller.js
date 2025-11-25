@@ -7,34 +7,95 @@ const { logger } = require('../utils/logger');
  */
 const getProducts = async (req, res, next) => {
   try {
-    const { category, search, isActive = 'true' } = req.query;
+    const { 
+      category, 
+      search, 
+      isActive, // Keep it simple, don't default to 'true'
+      includeInactive,
+      material,
+      theme,
+      features,
+      sort = 'featured' 
+    } = req.query;
 
     let query = db.collection('products');
 
-    // Filter by active status
-    if (isActive === 'true') {
-      query = query.where('isActive', '==', true);
+    // Filter by active status unless includeInactive is true
+    if (includeInactive !== 'true') {
+      // If isActive is not specified, default to true for public queries
+      const filterActive = isActive === undefined ? true : isActive === 'true';
+      if (filterActive) {
+        query = query.where('isActive', '==', true);
+      }
     }
+    // If includeInactive is 'true', we don't apply any isActive filter.
 
     // Filter by category
     if (category) {
       query = query.where('category', '==', category);
     }
 
-    const snapshot = await query.orderBy('createdAt', 'desc').get();
+    // Filter by material/finish
+    if (material) {
+      query = query.where('specifications.material', '==', material);
+    }
+
+    // Filter by theme/vibe
+    if (theme) {
+      query = query.where('specifications.theme', '==', theme);
+    }
+
+    // Sorting
+    switch (sort) {
+      case 'best-selling':
+        query = query.orderBy('stats.salesCount', 'desc');
+        break;
+      case 'alpha-asc':
+        query = query.orderBy('name', 'asc');
+        break;
+      case 'alpha-desc':
+        query = query.orderBy('name', 'desc');
+        break;
+      case 'price-asc':
+        query = query.orderBy('discountedPrice', 'asc');
+        break;
+      case 'price-desc':
+        query = query.orderBy('discountedPrice', 'desc');
+        break;
+      case 'date-asc':
+        query = query.orderBy('createdAt', 'asc');
+        break;
+      case 'date-desc':
+        query = query.orderBy('createdAt', 'desc');
+        break;
+      case 'featured':
+      default:
+        query = query.orderBy('isFeatured', 'desc').orderBy('createdAt', 'desc');
+        break;
+    }
+
+    const snapshot = await query.get();
 
     let products = snapshot.docs.map((doc) => ({
       id: doc.id,
       ...doc.data(),
     }));
 
-    // Client-side search filtering (Firestore doesn't support full-text search)
+    // Client-side search and feature filtering
     if (search) {
       const searchLower = search.toLowerCase();
       products = products.filter(
         (product) =>
-          product.name.toLowerCase().includes(searchLower) ||
-          product.description.toLowerCase().includes(searchLower)
+          (product.name && product.name.toLowerCase().includes(searchLower)) ||
+          (product.description && product.description.toLowerCase().includes(searchLower)) ||
+          (product.tags && product.tags.some(tag => tag.toLowerCase().includes(searchLower)))
+      );
+    }
+    
+    if (features) {
+      const featureList = features.split(',');
+      products = products.filter(p => 
+        p.features && featureList.every(f => p.features.includes(f))
       );
     }
 

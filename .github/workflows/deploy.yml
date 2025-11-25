@@ -1,4 +1,4 @@
-name: Deploy to Firebase
+name: CI/CD for PJA3D Platform
 
 on:
   push:
@@ -9,50 +9,117 @@ on:
 env:
   PROJECT_ID: pja3d-fire
   REGION: asia-south1
+  GAR_LOCATION: asia-south1-docker.pkg.dev
+  BACKEND_SERVICE_NAME: pja3d-backend
+  FRONTEND_PROJECT_NAME: pja3d-frontend
 
 jobs:
-  test-backend:
+  build-and-test:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
-    
-    - name: Setup Node.js
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    #---------------------------------
+    # Backend Setup & Test
+    #---------------------------------
+    - name: Setup Node.js for Backend
       uses: actions/setup-node@v4
       with:
-        node-version: '18'
-    
-    - name: Cache npm dependencies
-      uses: actions/cache@v3
-      with:
-        path: backend/node_modules
-        key: ${{ runner.os }}-node-${{ hashFiles('backend/package-lock.json') }}
-        restore-keys: |
-          ${{ runner.os }}-node-
-    
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: backend/package-lock.json
+
     - name: Install backend dependencies
-      run: |
-        cd backend
-        npm install
-    
+      run: npm install --prefix backend
+
     - name: Run backend tests
-      run: |
-        cd backend
-        npm test || echo "Tests not yet implemented"
-    
+      run: npm test --prefix backend -- --if-present
+
     - name: Lint backend code
-      run: |
-        cd backend
-        npm run lint || echo "Linting not yet configured"
+      run: npm run lint --prefix backend -- --if-present
+
+    #---------------------------------
+    # Frontend Setup & Test
+    #---------------------------------
+    - name: Setup Node.js for Frontend
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+        cache-dependency-path: frontend/package-lock.json
+
+    - name: Install frontend dependencies
+      run: npm install --prefix frontend
+
+    - name: Build frontend
+      run: npm run build --prefix frontend
+      env:
+        VITE_API_URL: "https://pja3d-backend-test-url.com" # Dummy URL for build step
+
+    - name: Run frontend tests
+      run: npm test --prefix frontend -- --if-present
+
+  deploy-backend:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main'
+    
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: 'projects/969354234211/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+        service_account: 'firebase-sdk-pja3d@pja3d-fire.iam.gserviceaccount.com'
+
+    - name: Set up Cloud SDK
+      uses: google-github-actions/setup-gcloud@v2
+
+    - name: Configure Docker
+      run: gcloud auth configure-docker ${{ env.GAR_LOCATION }}
+
+    - name: Build and Push Docker image
+      uses: docker/build-push-action@v5
+      with:
+        context: ./backend
+        push: true
+        tags: ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE_NAME }}:${{ github.sha }}
+
+    - name: Deploy to Cloud Run
+      uses: google-github-actions/deploy-cloudrun@v2
+      with:
+        service: ${{ env.BACKEND_SERVICE_NAME }}
+        region: ${{ env.REGION }}
+        image: ${{ env.GAR_LOCATION }}/${{ env.PROJECT_ID }}/${{ env.BACKEND_SERVICE_NAME }}:${{ github.sha }}
+        flags: '--allow-unauthenticated --platform=managed --min-instances=0 --max-instances=2'
 
   deploy-frontend:
     runs-on: ubuntu-latest
-    needs: test-backend
+    needs: build-and-test
     if: github.ref == 'refs/heads/main'
     
+    permissions:
+      contents: 'read'
+      id-token: 'write'
+
     steps:
-    - uses: actions/checkout@v4
-    
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Authenticate to Google Cloud
+      uses: google-github-actions/auth@v2
+      with:
+        workload_identity_provider: 'projects/969354234211/locations/global/workloadIdentityPools/github-actions-pool/providers/github-actions-provider'
+        service_account: 'firebase-sdk-pja3d@pja3d-fire.iam.gserviceaccount.com'
+
     - name: Deploy to Firebase Hosting
       uses: FirebaseExtended/action-hosting-deploy@v0
       with:
@@ -60,31 +127,6 @@ jobs:
         firebaseServiceAccount: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
         projectId: ${{ env.PROJECT_ID }}
         channelId: live
+        target: ${{ env.FRONTEND_PROJECT_NAME }}
       env:
         FIREBASE_CLI_EXPERIMENTS: webframeworks
-
-  deploy-backend:
-    runs-on: ubuntu-latest
-    needs: test-backend
-    if: github.ref == 'refs/heads/main'
-    
-    steps:
-    - uses: actions/checkout@v4
-    
-    - name: Authenticate to Google Cloud
-      uses: google-github-actions/auth@v2
-      with:
-        credentials_json: '${{ secrets.FIREBASE_SERVICE_ACCOUNT }}'
-    
-    - name: Set up Cloud SDK
-      uses: google-github-actions/setup-gcloud@v2
-    
-    - name: Deploy to Cloud Run
-      run: |
-        cd backend
-        gcloud run deploy pja3d-backend \
-          --source . \
-          --platform managed \
-          --region ${{ env.REGION }} \
-          --allow-unauthenticated \
-          --timeout=300

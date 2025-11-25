@@ -1,7 +1,6 @@
-const { db } = require('../services/firebase.service');
+const { db, admin } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
-const { generateSignedUploadUrl } = require('../services/storage.service');
 
 /**
  * Get dashboard statistics
@@ -136,19 +135,26 @@ exports.createProduct = async (req, res, next) => {
   try {
     const productData = req.body;
 
-    const product = {
-      ...productData,
-      stats: {
+    // Ensure stats object exists
+    if (!productData.stats) {
+      productData.stats = {
         viewCount: 0,
         salesCount: 0,
         reviewCount: 0,
         averageRating: 0
-      },
+      };
+    }
+
+    const product = {
+      ...productData,
       isActive: productData.isActive !== undefined ? productData.isActive : true,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: req.user.uid
     };
+
+    // Remove any undefined fields to avoid Firestore errors
+    Object.keys(product).forEach(key => product[key] === undefined && delete product[key]);
 
     const docRef = await db.collection('products').add(product);
 
@@ -156,7 +162,7 @@ exports.createProduct = async (req, res, next) => {
 
     res.status(201).json({
       success: true,
-      data: { id: docRef.id, product },
+      data: { id: docRef.id, ...product },
       message: 'Product created successfully'
     });
   } catch (error) {
@@ -172,6 +178,9 @@ exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+
+    // Remove any undefined fields to avoid Firestore errors
+    Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
 
     await db.collection('products').doc(id).update({
       ...updates,
@@ -326,361 +335,12 @@ exports.updateOrderStatus = async (req, res, next) => {
   }
 };
 
-/**
- * Get all users (Admin)
- */
-exports.getAllUsers = async (req, res, next) => {
-  try {
-    const snapshot = await db.collection('users')
-      .orderBy('createdAt', 'desc')
-      .get();
 
-    const users = [];
-    snapshot.forEach(doc => {
-      const userData = doc.data();
-      users.push({
-        uid: doc.id,
-        email: userData.email,
-        displayName: userData.displayName,
-        role: userData.role,
-        createdAt: userData.createdAt,
-        isActive: userData.isActive
-      });
-    });
-
-    res.json({
-      success: true,
-      data: { users }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
 
 /**
- * Update user role (Admin)
+ * Update settings - DEPRECATED in favor of settings controller
  */
-exports.updateUserRole = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const { role } = req.body;
-
-    if (!['customer', 'admin', 'super_admin'].includes(role)) {
-      throw new AppError('Invalid role', 400, 'INVALID_ROLE');
-    }
-
-    await db.collection('users').doc(id).update({
-      role,
-      updatedAt: new Date()
-    });
-
-    logger.info(`User ${id} role updated to ${role} by ${req.user.email}`);
-
-    res.json({
-      success: true,
-      message: 'User role updated'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Get signed upload URL for Cloud Storage (Admin)
- */
-exports.getUploadUrl = async (req, res, next) => {
-  try {
-    const { fileName, contentType } = req.body;
-
-    if (!fileName || !contentType) {
-      throw new AppError('fileName and contentType are required', 400, 'MISSING_PARAMS');
-    }
-
-    // Validate content type
-    if (!contentType.startsWith('image/')) {
-      throw new AppError('Only image files are allowed', 400, 'INVALID_FILE_TYPE');
-    }
-
-    const { uploadUrl, publicUrl } = await generateSignedUploadUrl(fileName, contentType);
-
-    logger.info(`Upload URL generated for: ${fileName} by ${req.user.email || req.user.uid}`);
-
-    res.json({
-      success: true,
-      uploadUrl,
-      publicUrl
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Create admin user
- */
-exports.createAdminUser = async (req, res, next) => {
-  try {
-    const { email, password, displayName } = req.body;
-
-    if (!email || !password) {
-      throw new AppError('Email and password are required', 400, 'MISSING_PARAMS');
-    }
-
-    const admin = require('firebase-admin');
-
-    // Create user in Firebase Auth
-    const userRecord = await admin.auth().createUser({
-      email,
-      password,
-      displayName: displayName || email.split('@')[0]
-    });
-
-    // Create user document in Firestore with admin role
-    await db.collection('users').doc(userRecord.uid).set({
-      email,
-      displayName: displayName || email.split('@')[0],
-      role: 'admin',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    });
-
-    logger.info(`Admin user created: ${email} by ${req.user.email}`);
-
-    res.json({
-      success: true,
-      message: 'Admin user created successfully',
-      data: {
-        uid: userRecord.uid,
-        email: userRecord.email,
-        displayName: userRecord.displayName
-      }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * CSV Import for products
- */
-exports.importProductsCSV = async (req, res, next) => {
-  try {
-    if (!req.file) {
-      throw new AppError('CSV file is required', 400, 'MISSING_FILE');
-    }
-
-    const parse = require('csv-parse/sync').parse;
-    const fs = require('fs');
-    
-    const fileContent = fs.readFileSync(req.file.path, 'utf-8');
-    const records = parse(fileContent, {
-      columns: true,
-      skip_empty_lines: true,
-      trim: true
-    });
-
-    const batch = db.batch();
-    const results = {
-      success: 0,
-      failed: 0,
-      errors: []
-    };
-
-    for (const record of records) {
-      try {
-        // Map CSV columns to product schema (flexible)
-        const productData = {
-          name: record.name || record.productName || '',
-          category: record.category || 'uncategorized',
-          subcategory: record.subcategory || '',
-          description: record.description || '',
-          basePrice: parseFloat(record.basePrice || record.price || 0),
-          baseDiscount: parseFloat(record.baseDiscount || 0),
-          extraDiscount: parseFloat(record.extraDiscount || 0),
-          stock: parseInt(record.stock || 0),
-          isAvailable: record.isAvailable !== 'false',
-          isActive: record.isActive !== 'false',
-          images: record.images ? record.images.split('|') : [],
-          specifications: record.specifications ? JSON.parse(record.specifications) : {},
-          createdAt: new Date(),
-          updatedAt: new Date()
-        };
-
-        // Calculate discounted price
-        const discountMultiplier = (100 - productData.baseDiscount - productData.extraDiscount) / 100;
-        productData.discountedPrice = productData.basePrice * discountMultiplier;
-
-        // Auto-create category if it doesn't exist
-        const categoryRef = db.collection('categories').doc(productData.category);
-        const categoryDoc = await categoryRef.get();
-        if (!categoryDoc.exists) {
-          batch.set(categoryRef, {
-            name: productData.category,
-            subcategories: [productData.subcategory].filter(Boolean),
-            createdAt: new Date()
-          });
-        } else if (productData.subcategory && !categoryDoc.data().subcategories.includes(productData.subcategory)) {
-          batch.update(categoryRef, {
-            subcategories: [...categoryDoc.data().subcategories, productData.subcategory]
-          });
-        }
-
-        const productRef = db.collection('products').doc();
-        batch.set(productRef, productData);
-        results.success++;
-      } catch (error) {
-        results.failed++;
-        results.errors.push({ row: record, error: error.message });
-      }
-    }
-
-    await batch.commit();
-
-    // Clean up uploaded file
-    fs.unlinkSync(req.file.path);
-
-    logger.info(`CSV import completed: ${results.success} success, ${results.failed} failed`);
-
-    res.json({
-      success: true,
-      message: 'CSV import completed',
-      data: results
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Get all categories
- */
-exports.getCategories = async (req, res, next) => {
-  try {
-    const snapshot = await db.collection('categories').orderBy('name').get();
-    const categories = [];
-    
-    for (const doc of snapshot.docs) {
-      const categoryData = doc.data();
-      // Count products in this category
-      const productCount = await db.collection('products')
-        .where('category', '==', doc.id)
-        .where('isActive', '==', true)
-        .count()
-        .get();
-      
-      categories.push({
-        id: doc.id,
-        ...categoryData,
-        productCount: productCount.data().count
-      });
-    }
-
-    res.json({
-      success: true,
-      data: { categories }
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Create category
- */
-exports.createCategory = async (req, res, next) => {
-  try {
-    const { name, slug, description, icon } = req.body;
-
-    if (!name || !slug) {
-      throw new AppError('Name and slug are required', 400, 'VALIDATION_ERROR');
-    }
-
-    // Check if slug already exists
-    const existingSnap = await db.collection('categories').where('slug', '==', slug).get();
-    if (!existingSnap.empty) {
-      throw new AppError('Category slug already exists', 400, 'DUPLICATE_SLUG');
-    }
-
-    const category = {
-      name,
-      slug,
-      description: description || '',
-      icon: icon || '',
-      createdAt: new Date(),
-      updatedAt: new Date()
-    };
-
-    const docRef = await db.collection('categories').add(category);
-
-    logger.info(`Category created: ${name} by ${req.user.email}`);
-
-    res.status(201).json({
-      success: true,
-      data: { id: docRef.id, ...category },
-      message: 'Category created successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Update category
- */
-exports.updateCategory = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const updates = req.body;
-
-    await db.collection('categories').doc(id).update({
-      ...updates,
-      updatedAt: new Date()
-    });
-
-    logger.info(`Category updated: ${id} by ${req.user.email}`);
-
-    res.json({
-      success: true,
-      message: 'Category updated successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Delete category
- */
-exports.deleteCategory = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-
-    // Check if category has products
-    const productCount = await db.collection('products')
-      .where('category', '==', id)
-      .count()
-      .get();
-
-    if (productCount.data().count > 0) {
-      throw new AppError('Cannot delete category with existing products', 400, 'CATEGORY_HAS_PRODUCTS');
-    }
-
-    await db.collection('categories').doc(id).delete();
-
-    logger.info(`Category deleted: ${id} by ${req.user.email}`);
-
-    res.json({
-      success: true,
-      message: 'Category deleted successfully'
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
-/**
- * Update settings
- */
+/*
 exports.updateSettings = async (req, res, next) => {
   try {
     const updates = req.body;
@@ -693,6 +353,203 @@ exports.updateSettings = async (req, res, next) => {
       success: true,
       message: 'Settings updated successfully'
     });
+  } catch (error) {
+    next(error);
+  }
+};
+*/
+
+/**
+ * Get a signed URL for uploading a file to Firebase Storage.
+ */
+exports.getUploadUrl = async (req, res, next) => {
+  try {
+    const { fileName, contentType } = req.body;
+    if (!fileName || !contentType) {
+      throw new AppError('fileName and contentType are required', 400);
+    }
+
+    const { generateSignedUploadUrl } = require('../services/storage.service');
+    const url = await generateSignedUploadUrl(fileName, contentType);
+
+    res.json({
+      success: true,
+      data: { url },
+      message: 'Upload URL generated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Create a new admin user.
+ */
+exports.createAdmin = async (req, res, next) => {
+  try {
+    const { email, password, name } = req.body;
+    if (!email || !password || !name) {
+      throw new AppError('Email, password, and name are required', 400);
+    }
+
+    const userRecord = await admin.auth().createUser({
+      email,
+      password,
+      displayName: name,
+    });
+
+    // Set custom claim to identify user as an admin
+    await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
+
+    // Optionally, save admin details to Firestore
+    await db.collection('admins').doc(userRecord.uid).set({
+      name,
+      email,
+      createdAt: new Date(),
+      status: 'Active',
+    });
+
+    logger.info(`Admin created: ${userRecord.uid} by ${req.user.email}`);
+
+    res.status(201).json({
+      success: true,
+      message: 'Admin user created successfully',
+      data: { uid: userRecord.uid },
+    });
+  } catch (error) {
+    logger.error('Error creating admin user:', error);
+    if (error.code === 'auth/email-already-exists') {
+      next(new AppError('An admin with this email already exists.', 409));
+    } else {
+      next(error);
+    }
+  }
+};
+
+/**
+ * Get all admin users.
+ */
+exports.getAdmins = async (req, res, next) => {
+  try {
+    const snapshot = await db.collection('admins').get();
+    const admins = [];
+    snapshot.forEach(doc => {
+      admins.push({ id: doc.id, ...doc.data() });
+    });
+    res.json({ success: true, data: admins });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update an admin user.
+ */
+exports.updateAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { name, status } = req.body;
+    const updates = { updatedAt: new Date() };
+    if (name) updates.name = name;
+    if (status) updates.status = status;
+
+    await db.collection('admins').doc(id).update(updates);
+
+    logger.info(`Admin ${id} updated by ${req.user.email}`);
+    res.json({ success: true, message: 'Admin updated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete an admin user.
+ */
+exports.deleteAdmin = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    // Deactivate in Firestore
+    await db.collection('admins').doc(id).update({ status: 'Inactive' });
+    // Disable in Firebase Auth
+    await admin.auth().updateUser(id, { disabled: true });
+
+    logger.info(`Admin ${id} deleted (deactivated) by ${req.user.email}`);
+    res.json({ success: true, message: 'Admin user deactivated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Add a review for a product
+ */
+exports.addReview = async (req, res, next) => {
+  try {
+    const { productId, rating, reviewText, reviewerName } = req.body;
+    const reviewData = {
+      productId,
+      rating: Number(rating),
+      reviewText,
+      reviewerName,
+      images: req.body.images || [],
+      createdAt: new Date(),
+      approved: false, // Reviews start as unapproved
+      userId: req.user.uid,
+    };
+
+    const reviewRef = await db.collection('reviews').add(reviewData);
+
+    // Update product's review stats
+    const productRef = db.collection('products').doc(productId);
+    const productDoc = await productRef.get();
+    if (productDoc.exists) {
+      const productData = productDoc.data();
+      const stats = productData.stats || {};
+      const newReviewCount = (stats.reviewCount || 0) + 1;
+      const newAverageRating = ((stats.averageRating || 0) * (stats.reviewCount || 0) + Number(rating)) / newReviewCount;
+      
+      await productRef.update({
+        'stats.reviewCount': newReviewCount,
+        'stats.averageRating': newAverageRating,
+      });
+    }
+
+    logger.info(`Review added for product ${productId} by ${req.user.email}`);
+    res.status(201).json({ success: true, message: 'Review submitted for approval.', reviewId: reviewRef.id });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update a review (e.g., approve it)
+ */
+exports.updateReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const updates = req.body; // e.g., { approved: true }
+
+    await db.collection('reviews').doc(id).update({
+      ...updates,
+      updatedAt: new Date(),
+    });
+
+    logger.info(`Review ${id} updated by ${req.user.email}`);
+    res.json({ success: true, message: 'Review updated successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Delete a review
+ */
+exports.deleteReview = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    await db.collection('reviews').doc(id).delete();
+    logger.info(`Review ${id} deleted by ${req.user.email}`);
+    res.json({ success: true, message: 'Review deleted successfully.' });
   } catch (error) {
     next(error);
   }

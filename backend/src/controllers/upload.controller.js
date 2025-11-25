@@ -1,7 +1,6 @@
 const { admin } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
-const path = require('path');
 
 /**
  * Upload product image to Firebase Storage
@@ -92,6 +91,28 @@ exports.deleteProductImage = async (req, res, next) => {
       message: 'Image deleted successfully'
     });
 
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Generate a signed URL for client-side upload
+ */
+exports.generateUploadUrl = async (req, res, next) => {
+  try {
+    const { fileName, contentType } = req.body;
+    if (!fileName || !contentType) {
+      throw new AppError('fileName and contentType are required', 400, 'MISSING_PARAMS');
+    }
+
+    const { generateSignedUploadUrl } = require('../services/storage.service');
+    const uploadData = await generateSignedUploadUrl(fileName, contentType);
+
+    res.json({
+      success: true,
+      data: uploadData,
+    });
   } catch (error) {
     next(error);
   }

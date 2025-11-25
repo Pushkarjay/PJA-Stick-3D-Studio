@@ -1,6 +1,5 @@
 const { db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
-const { logger } = require('../utils/logger');
 
 /**
  * Get all products with pagination and filters

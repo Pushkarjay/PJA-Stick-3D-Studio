@@ -37,7 +37,7 @@ export default function Contact() {
               Get in Touch
             </h2>
             <p className="text-slate-600 mb-8">
-              Have questions or special requests? We'd love to hear from you!
+              Have questions or special requests? We&apos;d love to hear from you!
             </p>
             <div className="grid md:grid-cols-2 gap-6">
               <div className="card text-left">

@@ -2,10 +2,6 @@ const express = require('express');
 const router = express.Router();
 const { verifyFirebaseToken, verifyAdmin } = require('../middleware/authFirebase');
 const adminController = require('../controllers/admin.controller');
-const multer = require('multer');
-
-// Configure multer for CSV upload
-const upload = multer({ dest: 'uploads/temp/' });
 
 // All admin routes require authentication and admin role
 router.use(verifyFirebaseToken);
@@ -13,6 +9,7 @@ router.use(verifyAdmin);
 
 // Dashboard
 router.get('/dashboard', adminController.getDashboard);
+router.get('/stats', adminController.getDashboard); // Added for dashboard stats
 router.get('/analytics', adminController.getAnalytics);
 
 // Product management
@@ -24,25 +21,15 @@ router.post('/products/bulk', adminController.bulkUploadProducts);
 // Image upload
 router.post('/upload-url', adminController.getUploadUrl);
 
-// Order management
-router.get('/orders', adminController.getAllOrders);
-router.put('/orders/:id', adminController.updateOrderStatus);
+// Review management
+router.post('/reviews', adminController.addReview);
+router.put('/reviews/:id', adminController.updateReview);
+router.delete('/reviews/:id', adminController.deleteReview);
 
-// User management
-router.get('/users', adminController.getAllUsers);
-router.put('/users/:id/role', adminController.updateUserRole);
-router.post('/users/create-admin', adminController.createAdminUser);
-
-// CSV Import
-router.post('/import-products', upload.single('file'), adminController.importProductsCSV);
-
-// Category management
-router.get('/categories', adminController.getCategories);
-router.post('/categories', adminController.createCategory);
-router.put('/categories/:id', adminController.updateCategory);
-router.delete('/categories/:id', adminController.deleteCategory);
-
-// Settings management
-router.put('/settings', adminController.updateSettings);
+// Admin user management
+router.post('/create-admin', adminController.createAdmin);
+router.get('/admins', adminController.getAdmins);
+router.put('/admins/:id', adminController.updateAdmin);
+router.delete('/admins/:id', adminController.deleteAdmin);
 
 module.exports = router;

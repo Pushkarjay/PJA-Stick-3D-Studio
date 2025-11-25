@@ -1,10 +1,12 @@
-export default function StatsBanner() {
-  const stats = [
+export default function StatsBanner({ stats: statsData }) {
+  const defaultStats = [
     { label: 'Happy Customers', value: '500+' },
     { label: 'Projects Completed', value: '1000+' },
     { label: 'Custom Designs', value: '250+' },
     { label: 'Delivery Time', value: '24-48h' },
-  ]
+  ];
+
+  const stats = statsData && statsData.length > 0 ? statsData : defaultStats;
 
   return (
     <section className="bg-white py-12 border-y border-slate-200">

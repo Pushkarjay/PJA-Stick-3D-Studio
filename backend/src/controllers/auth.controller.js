@@ -1,6 +1,5 @@
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
-const bcrypt = require('bcrypt');
 const { admin, db } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
@@ -23,6 +22,7 @@ exports.register = async (req, res, next) => {
       });
     }
 
+    // eslint-disable-next-line no-unused-vars
     const { email, password, displayName, phoneNumber } = req.body;
 
     // Create Firebase user
@@ -90,7 +90,7 @@ exports.login = async (req, res, next) => {
       });
     }
 
-    const { email, password } = req.body;
+    const { email } = req.body;
 
     // Get user by email
     const userRecord = await admin.auth().getUserByEmail(email);
@@ -212,7 +212,7 @@ exports.forgotPassword = async (req, res, next) => {
  */
 exports.resetPassword = async (req, res, next) => {
   try {
-    const { token, newPassword } = req.body;
+    // const { token, newPassword } = req.body;
 
     // Verify and apply password reset
     // This would typically be done through Firebase client SDK
@@ -232,7 +232,7 @@ exports.resetPassword = async (req, res, next) => {
  */
 exports.verifyEmail = async (req, res, next) => {
   try {
-    const { token } = req.query;
+    // const { token } = req.query;
 
     // Verify email token
     // This would typically be done through Firebase client SDK

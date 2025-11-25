@@ -1,9 +1,12 @@
 const express = require('express');
 const multer = require('multer');
-const { uploadProductImage, deleteProductImage } = require('../controllers/upload.controller');
-// const { authenticateToken } = require('../middleware/auth'); // TODO: Enable when auth is fully implemented
+const { uploadProductImage, deleteProductImage, generateUploadUrl } = require('../controllers/upload.controller');
+const { requireAdmin } = require('../middleware/authFirebase');
 
 const router = express.Router();
+
+// All routes in this file should be protected
+router.use(requireAdmin);
 
 // Configure multer for memory storage
 const upload = multer({
@@ -21,15 +24,13 @@ const upload = multer({
   }
 });
 
-// Handle OPTIONS preflight
-router.options('/product', (req, res) => {
-  res.status(200).end();
-});
+// Generate a signed URL for uploading a product image
+router.post('/generate-url', generateUploadUrl);
 
-// Upload product image (auth temporarily disabled for testing)
+// Legacy endpoint for direct server upload (can be deprecated)
 router.post('/product', upload.single('image'), uploadProductImage);
 
-// Delete product image (auth temporarily disabled for testing)
+// Delete product image
 router.delete('/product/:filename', deleteProductImage);
 
 module.exports = router;

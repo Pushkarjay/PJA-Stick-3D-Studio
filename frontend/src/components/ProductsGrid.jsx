@@ -1,6 +1,7 @@
 import ProductCard from './ProductCard'
+import { FileText } from 'lucide-react'
 
-export default function ProductsGrid({ products, loading, onProductClick }) {
+export default function ProductsGrid({ products, loading, onProductClick, showCustomCta, whatsAppNumber }) {
   if (loading) {
     return (
       <div className="container mx-auto px-4 py-12">
@@ -35,6 +36,31 @@ export default function ProductsGrid({ products, loading, onProductClick }) {
     )
   }
 
+  const CustomOrderCard = () => (
+    <div className="group relative flex flex-col overflow-hidden rounded-2xl border-2 border-dashed border-primary-400 bg-primary-50/50 shadow-sm transition-all hover:shadow-lg hover:border-primary-500 hover:bg-primary-50">
+      <div className="flex flex-1 flex-col items-center justify-center p-8 text-center">
+        <div className="mb-4 rounded-full bg-primary-100 p-4">
+          <FileText className="h-10 w-10 text-primary-600" />
+        </div>
+        <h3 className="font-semibold text-lg text-primary-800 mb-2">
+          Looking for a Custom Design?
+        </h3>
+        <p className="text-sm text-primary-700 mb-4">
+          We can create custom 3D prints just for you. Get in touch for a quote!
+        </p>
+        <a
+          href={`https://wa.me/${whatsAppNumber || '916372362313'}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="btn btn-primary rounded-full"
+        >
+          Chat on WhatsApp
+        </a>
+      </div>
+    </div>
+  );
+
+
   return (
     <section id="products" className="py-12 bg-slate-50">
       <div className="container mx-auto px-4">
@@ -48,11 +74,13 @@ export default function ProductsGrid({ products, loading, onProductClick }) {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          {showCustomCta && <CustomOrderCard />}
           {products.map((product, index) => (
             <ProductCard
               key={product.id}
               product={product}
               style={{ animationDelay: `${index * 0.05}s` }}
+              onProductClick={onProductClick}
             />
           ))}
         </div>

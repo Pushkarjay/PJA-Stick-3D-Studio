@@ -1,237 +1,255 @@
-import { X, Clock, Package, MessageCircle, ShoppingCart } from 'lucide-react'
-import { useState, useEffect } from 'react'
-import { useCart } from '../hooks/useCart'
-import { openWhatsApp, formatProductMessage } from '../utils/whatsapp'
-import ReviewsModal from './ReviewsModal'
+import { X, ShoppingCart, Star, Share2, Minus, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useState, useEffect, useCallback } from 'react';
+import { useCart } from '../hooks/useCart';
+import { apiRequest } from '../lib/api';
+import toast from 'react-hot-toast';
 
+const StarRating = ({ rating, size = 'w-5 h-5' }) => (
+  <div className="flex items-center">
+    {[...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`${size} ${i < Math.floor(rating) ? 'text-yellow-400' : 'text-slate-300'}`}
+        fill="currentColor"
+      />
+    ))}
+  </div>
+);
 
-  const [quantity, setQuantity] = useState(1)
-  const { addToCart } = useCart()
-  const [showReviews, setShowReviews] = useState(false)
-  const [reviews, setReviews] = useState([])
-  const [loadingReviews, setLoadingReviews] = useState(false)
+const ProductImageGallery = ({ images, productName }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
 
-  useEffect(() => {
-    if (showReviews && product?.id) {
-      fetchReviews()
-    }
-    // eslint-disable-next-line
-  }, [showReviews])
-
-  const fetchReviews = async () => {
-    setLoadingReviews(true)
-    try {
-      const res = await fetch(`/api/reviews/${product.id}`)
-      const data = await res.json()
-      setReviews(data?.data?.reviews || [])
-    } catch (e) {
-      setReviews([])
-    } finally {
-      setLoadingReviews(false)
-    }
+  if (!images || images.length === 0) {
+    return (
+      <div className="aspect-square w-full bg-slate-100 rounded-lg flex items-center justify-center">
+        <span className="text-slate-400">No Image</span>
+      </div>
+    );
   }
 
-  if (!product) return null
+  const nextImage = () => {
+    setCurrentIndex((prevIndex) => (prevIndex + 1) % images.length);
+  };
 
-  const handleAddToCart = () => {
-    addToCart(product, quantity)
-    onClose()
-  }
-
-  const handleWhatsAppOrder = () => {
-    const message = formatProductMessage(product, quantity)
-    openWhatsApp(message)
-  }
-
-  const handleBackdropClick = (e) => {
-    if (e.target === e.currentTarget) {
-      onClose()
-    }
-  }
+  const prevImage = () => {
+    setCurrentIndex((prevIndex) => (prevIndex - 1 + images.length) % images.length);
+  };
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-fade-in"
-      onClick={handleBackdropClick}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="product-modal-title"
-    >
-      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-slide-up">
-        {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-slate-200 p-4 flex items-center justify-between z-10">
-          <h2 id="product-modal-title" className="text-xl font-bold text-slate-900">
-            Product Details
-          </h2>
-          <button
-            onClick={onClose}
-            className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-            aria-label="Close modal"
-          >
-            <X className="w-6 h-6" />
+    <div className="relative">
+      <div className="aspect-square w-full overflow-hidden rounded-xl shadow-lg">
+        <img
+          src={images[currentIndex]}
+          alt={`${productName} - image ${currentIndex + 1}`}
+          className="w-full h-full object-cover transition-opacity duration-300"
+        />
+      </div>
+      {images.length > 1 && (
+        <>
+          <button onClick={prevImage} className="absolute left-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white">
+            <ChevronLeft className="w-6 h-6" />
+          </button>
+          <button onClick={nextImage} className="absolute right-2 top-1/2 -translate-y-1/2 bg-white/70 p-2 rounded-full shadow-md hover:bg-white">
+            <ChevronRight className="w-6 h-6" />
+          </button>
+          <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+            {images.map((_, index) => (
+              <div
+                key={index}
+                className={`w-2 h-2 rounded-full ${currentIndex === index ? 'bg-primary-600' : 'bg-slate-300'}`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+const CustomerReviews = ({ productId }) => {
+    const [reviews, setReviews] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [sort, setSort] = useState('Most Recent');
+
+    const fetchReviews = useCallback(async () => {
+        setLoading(true);
+        try {
+            const { data } = await apiRequest(`/reviews/${productId}`);
+            let sortedReviews = data.reviews || [];
+            if (sort === 'Highest Rating') {
+                sortedReviews.sort((a, b) => b.rating - a.rating);
+            } else if (sort === 'Lowest Rating') {
+                sortedReviews.sort((a, b) => a.rating - b.rating);
+            }
+            // Default is most recent, which the API should provide
+            setReviews(sortedReviews);
+        } catch (error) {
+            console.error("Failed to fetch reviews", error);
+        } finally {
+            setLoading(false);
+        }
+    }, [productId, sort]);
+
+    useEffect(() => {
+        fetchReviews();
+    }, [fetchReviews]);
+
+    const overallRating = reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 0;
+
+    return (
+        <div className="mt-12">
+            <div className="flex flex-wrap items-center justify-between gap-4 mb-6 border-b pb-4">
+                <h3 className="text-2xl font-bold text-slate-800">Customer Reviews</h3>
+                {reviews.length > 0 && (
+                    <div className="flex items-center gap-4">
+                        <StarRating rating={overallRating} />
+                        <span className="text-slate-600">{overallRating.toFixed(1)} out of 5 ({reviews.length} reviews)</span>
+                    </div>
+                )}
+            </div>
+
+            {loading ? (
+                <p>Loading reviews...</p>
+            ) : reviews.length === 0 ? (
+                <p className="text-slate-500">No reviews yet for this product.</p>
+            ) : (
+                <div className="space-y-6">
+                    {reviews.map(review => (
+                        <div key={review.id} className="border-b pb-4">
+                            <div className="flex items-center gap-3">
+                                <div className="w-10 h-10 bg-slate-200 rounded-full flex items-center justify-center font-bold text-slate-600">
+                                    {review.reviewerName ? review.reviewerName.charAt(0) : 'A'}
+                                </div>
+                                <div>
+                                    <p className="font-semibold">{review.reviewerName || 'Anonymous'}</p>
+                                    <StarRating rating={review.rating} size="w-4 h-4" />
+                                </div>
+                                <p className="text-sm text-slate-500 ml-auto">{new Date(review.createdAt.seconds * 1000).toLocaleDateString()}</p>
+                            </div>
+                            <p className="mt-2 text-slate-700">{review.reviewText}</p>
+                            {/* Review images could be displayed here */}
+                        </div>
+                    ))}
+                </div>
+            )}
+        </div>
+    );
+};
+
+
+export default function ProductModal({ product, onClose }) {
+  const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
+
+  useEffect(() => {
+    if (product) {
+      setQuantity(1); // Reset quantity when a new product is opened
+    }
+  }, [product]);
+
+  if (!product) return null;
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+    toast.success(`${quantity} x ${product.name} added to cart!`);
+    onClose();
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator.share({
+        title: product.name,
+        text: `Check out this product: ${product.name}`,
+        url: window.location.href, // This will be the base URL, might need adjustment for product pages
+      }).catch(console.error);
+    } else {
+      toast('Share feature not available on this device.');
+    }
+  };
+
+  const discountedPrice = product.pricing?.discountedPrice;
+  const basePrice = product.pricing?.basePrice;
+  const hasDiscount = discountedPrice && basePrice && discountedPrice < basePrice;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 animate-fade-in-fast" onClick={onClose}>
+      <div
+        className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col animate-slide-up-fast"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-4 border-b flex justify-between items-center sticky top-0 bg-white rounded-t-2xl z-10">
+          <h2 className="text-xl font-bold text-slate-800 truncate pr-4">{product.name}</h2>
+          <button onClick={onClose} className="p-2 rounded-full hover:bg-slate-100 transition-colors">
+            <X className="w-6 h-6 text-slate-600" />
           </button>
         </div>
 
-        {/* Content */}
-        <div className="p-6">
+        <div className="flex-1 overflow-y-auto p-6">
           <div className="grid md:grid-cols-2 gap-8">
-            {/* Product Image */}
-            <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-              {product.imageUrl ? (
-                <img
-                  src={product.imageUrl}
-                  alt={product.name}
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center">
-                  <Package className="w-24 h-24 text-slate-300" />
-                </div>
-              )}
-            </div>
+            <ProductImageGallery images={product.images} productName={product.name} />
 
-            {/* Product Info */}
-            <div className="space-y-6">
-              <div>
-                <div className="flex items-start justify-between mb-2">
-                  <h3 className="text-3xl font-display font-bold text-slate-900">
-                    {product.name}
-                  </h3>
-                  {product.category && (
-                    <span className="badge badge-info">{product.category}</span>
-                  )}
-                </div>
-                {product.subCategory && (
-                  <p className="text-sm text-slate-600 mb-3">{product.subCategory}</p>
-                )}
-                {product.description && (
-                  <p className="text-slate-700 leading-relaxed">{product.description}</p>
-                )}
-              </div>
-
-              {/* Specifications */}
-              <div className="bg-slate-50 rounded-lg p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Price Tier</span>
-                  <span className="text-lg font-bold text-primary-600">{product.priceTier}</span>
-                </div>
-
-                {product.difficulty && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Difficulty</span>
-                    <span className="badge badge-info">{product.difficulty}</span>
+            <div className="flex flex-col">
+              <div className="flex-1">
+                <h1 className="text-3xl font-display font-bold text-slate-900 mb-3">{product.name}</h1>
+                
+                {product.stats?.reviewCount > 0 && (
+                  <div className="flex items-center gap-2 mb-4">
+                    <StarRating rating={product.stats.averageRating} />
+                    <span className="text-slate-600 text-sm">{product.stats.averageRating.toFixed(1)} ({product.stats.reviewCount} reviews)</span>
                   </div>
                 )}
 
-                {product.productionTime && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Production Time</span>
-                    <div className="flex items-center text-sm">
-                      <Clock className="w-4 h-4 mr-1 text-slate-600" />
-                      {product.productionTime}
-                    </div>
-                  </div>
-                )}
+                <div className="mb-4">
+                    {hasDiscount ? (
+                        <div className="flex items-baseline gap-3">
+                            <span className="text-4xl font-bold text-primary-600">₹{discountedPrice}</span>
+                            <span className="text-xl font-medium text-slate-400 line-through">₹{basePrice}</span>
+                        </div>
+                    ) : (
+                        basePrice && <span className="text-4xl font-bold text-slate-900">₹{basePrice}</span>
+                    )}
+                    {product.pricing?.discountBreakdown && (
+                        <p className="text-sm text-green-600 font-semibold mt-1">
+                            Includes {product.pricing.discountBreakdown.baseDiscount}% base + {product.pricing.discountBreakdown.extraDiscount}% extra discount
+                        </p>
+                    )}
+                </div>
 
-                {product.material && (
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-slate-600">Material</span>
-                    <span className="text-sm font-medium">{product.material}</span>
-                  </div>
-                )}
+                {product.description && <p className="text-slate-600 mt-4" dangerouslySetInnerHTML={{ __html: product.description }} />}
 
-                <div className="flex items-center justify-between pt-2 border-t border-slate-200">
-                  <span className="text-sm text-slate-600">Stock Status</span>
-                  {product.isActive && product.stockQty > 0 ? (
-                    <span className="badge badge-success">
-                      {product.stockQty <= 5 ? `Only ${product.stockQty} left` : 'In Stock'}
-                    </span>
-                  ) : (
-                    <span className="badge badge-error">Out of Stock</span>
-                  )}
+                <div className="mt-6 border-t pt-4 space-y-3">
+                    {product.category && <p><strong>Category:</strong> {product.category}</p>}
+                    {product.subcategory && <p><strong>Subcategory:</strong> {product.subcategory}</p>}
+                    {product.productionTime && <p><strong>Production Time:</strong> {product.productionTime} days</p>}
+                    {product.stock && <p><strong>Availability:</strong> {product.stock > 0 ? `${product.stock} in stock` : 'Available on backorder'}</p>}
                 </div>
               </div>
 
-              {/* Quantity Selector */}
-              {product.isActive && product.stockQty > 0 && (
+              <div className="mt-6 pt-6 border-t space-y-3">
                 <div className="flex items-center gap-4">
-                  <span className="text-sm font-medium text-slate-700">Quantity:</span>
-                  <div className="flex items-center gap-3">
-                    <button
-                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                      className="w-10 h-10 rounded-lg border-2 border-slate-300 hover:border-primary-600 hover:text-primary-600 transition-colors font-bold"
-                      aria-label="Decrease quantity"
-                    >
-                      -
-                    </button>
-                    <span className="w-12 text-center font-semibold text-lg">{quantity}</span>
-                    <button
-                      onClick={() => setQuantity(Math.min(product.stockQty, quantity + 1))}
-                      className="w-10 h-10 rounded-lg border-2 border-slate-300 hover:border-primary-600 hover:text-primary-600 transition-colors font-bold"
-                      aria-label="Increase quantity"
-                    >
-                      +
-                    </button>
+                  <div className="flex items-center border rounded-lg">
+                    <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="p-3 text-slate-600 hover:bg-slate-100 rounded-l-lg"><Minus size={16}/></button>
+                    <span className="px-4 font-semibold text-lg">{quantity}</span>
+                    <button onClick={() => setQuantity(q => q + 1)} className="p-3 text-slate-600 hover:bg-slate-100 rounded-r-lg"><Plus size={16}/></button>
                   </div>
-                </div>
-              )}
-
-              {/* Action Buttons */}
-              <div className="space-y-3">
-                {product.isActive && product.stockQty > 0 ? (
-                  <>
-                    <button
-                      onClick={handleWhatsAppOrder}
-                      className="btn btn-primary w-full text-base py-3"
-                    >
-                      <MessageCircle className="w-5 h-5 mr-2" />
-                      Request on WhatsApp
-                    </button>
-                    <button
-                      onClick={handleAddToCart}
-                      className="btn btn-outline w-full text-base py-3"
-                    >
-                      <ShoppingCart className="w-5 h-5 mr-2" />
-                      Add to Cart
-                    </button>
-                  </>
-                ) : (
-                  <button disabled className="btn w-full text-base py-3 opacity-50 cursor-not-allowed">
-                    Currently Unavailable
+                  <button
+                    onClick={handleAddToCart}
+                    className="w-full btn btn-primary btn-lg flex items-center justify-center gap-2"
+                  >
+                    <ShoppingCart className="w-5 h-5" />
+                    Add to Cart
                   </button>
-                )}
-              </div>
-
-              {/* Reviews Button */}
-              <div className="flex items-center gap-4 mt-4">
-                <button
-                  onClick={() => setShowReviews(true)}
-                  className="btn btn-outline text-sm px-4 py-2"
-                >
-                  View Reviews
-                </button>
-                {loadingReviews && showReviews && (
-                  <span className="text-xs text-slate-400 ml-2">Loading...</span>
-                )}
-              </div>
-
-              {/* Additional Info */}
-              <div className="text-sm text-slate-600 space-y-2 mt-4">
-                <p>✓ Custom designs available</p>
-                <p>✓ Quality guaranteed</p>
-                <p>✓ Fast delivery at Suresh Singh Chowk</p>
+                  <button onClick={handleShare} className="btn btn-outline p-3">
+                    <Share2 className="w-5 h-5" />
+                  </button>
+                </div>
               </div>
             </div>
           </div>
+
+          <CustomerReviews productId={product.id} />
         </div>
       </div>
-      {/* Reviews Modal */}
-      {showReviews && (
-        <ReviewsModal
-          reviews={reviews}
-          onClose={() => setShowReviews(false)}
-        />
-      )}
     </div>
-  )
+  );
 }

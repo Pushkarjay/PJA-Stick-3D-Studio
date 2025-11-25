@@ -250,3 +250,76 @@ exports.trackOrder = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * Get all orders (Admin)
+ */
+exports.getAllOrders = async (req, res, next) => {
+  try {
+    const snapshot = await db.collection('orders')
+      .orderBy('createdAt', 'desc')
+      .get();
+
+    const orders = [];
+    snapshot.forEach(doc => {
+      orders.push({
+        id: doc.id,
+        ...doc.data()
+      });
+    });
+
+    res.json({
+      success: true,
+      data: orders
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Update order status (Admin)
+ */
+exports.updateOrderStatus = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { status, note } = req.body;
+    const { name } = req.user; // Admin's name
+
+    const validStatuses = ['pending', 'processing', 'shipped', 'completed', 'cancelled', 'on-hold'];
+    if (!validStatuses.includes(status)) {
+      throw new AppError('Invalid status provided', 400, 'INVALID_STATUS');
+    }
+
+    const orderRef = db.collection('orders').doc(id);
+    const doc = await orderRef.get();
+
+    if (!doc.exists) {
+      throw new AppError('Order not found', 404, 'ORDER_NOT_FOUND');
+    }
+    
+    const orderData = doc.data();
+
+    await orderRef.update({
+      status: status,
+      timeline: [
+        ...orderData.timeline,
+        {
+          status: status,
+          timestamp: new Date(),
+          note: note || `Status updated by admin: ${name}`
+        }
+      ],
+      updatedAt: new Date()
+    });
+
+    logger.info(`Order status updated for ${orderData.orderNumber} to ${status}`);
+
+    res.json({
+      success: true,
+      message: 'Order status updated successfully'
+    });
+  } catch (error) {
+    next(error);
+  }
+};

@@ -55,7 +55,7 @@ const verifyAdmin = async (req, res, next) => {
 
     const userData = userDoc.data();
 
-    if (userData.role !== 'admin') {
+    if (userData.role !== 'admin' && userData.role !== 'super_admin') {
       return res.status(403).json({
         success: false,
         error: 'Forbidden - Admin access required',

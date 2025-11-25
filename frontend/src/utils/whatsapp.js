@@ -8,9 +8,10 @@ const WHATSAPP_NUMBER = import.meta.env.VITE_WHATSAPP_NUMBER || '916372362313'
  * @param {string} message - The message to pre-fill
  * @returns {string} - wa.me URL
  */
-export function createWhatsAppLink(message) {
+export function createWhatsAppLink(message, number) {
+  const whatsAppNumber = number || WHATSAPP_NUMBER;
   const encodedMessage = encodeURIComponent(message)
-  return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodedMessage}`
+  return `https://wa.me/${whatsAppNumber}?text=${encodedMessage}`
 }
 
 /**
@@ -86,8 +87,8 @@ Looking forward to your response. Thanks!`
  * Open WhatsApp in new window with pre-filled message
  * @param {string} message - Message to send
  */
-export function openWhatsApp(message) {
-  const link = createWhatsAppLink(message)
+export function openWhatsApp(message, number) {
+  const link = createWhatsAppLink(message, number)
   window.open(link, '_blank', 'noopener,noreferrer')
 }
 

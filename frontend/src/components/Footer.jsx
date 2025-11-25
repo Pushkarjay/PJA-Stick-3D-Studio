@@ -22,15 +22,15 @@ export default function Footer({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand */}
           <div className="space-y-4">
-            <div className="text-2xl font-display font-bold">
-              PJA<span className="text-primary-600">3D</span>
-            </div>
+            <Link to="/" className="block">
+              <img src="/assets/logo.png" alt="PJA3D Logo" className="h-10" />
+            </Link>
             <p className="text-slate-400 text-sm">
               {description}
             </p>
             <div className="flex gap-3">
               <a
-                href={socialLinks.facebook}
+                href={socialLinks?.facebook}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -39,7 +39,7 @@ export default function Footer({
                 <Facebook className="w-5 h-5" />
               </a>
               <a
-                href={socialLinks.instagram}
+                href={socialLinks?.instagram}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -48,7 +48,7 @@ export default function Footer({
                 <Instagram className="w-5 h-5" />
               </a>
               <a
-                href={socialLinks.whatsapp}
+                href={socialLinks?.whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
@@ -56,6 +56,10 @@ export default function Footer({
               >
                 <MessageCircle className="w-5 h-5" />
               </a>
+            </div>
+            <div className="pt-4">
+              <h4 className="text-xs font-semibold tracking-wider text-slate-500 uppercase">A legacy of:</h4>
+              <img src="/assets/kit-print-logo.png" alt="Kit Print Logo" className="h-8 mt-2" />
             </div>
           </div>
 
@@ -69,14 +73,14 @@ export default function Footer({
                 </Link>
               </li>
               <li>
-                <a href="#products" className="hover:text-primary-600 transition-colors">
+                <Link to="/products" className="hover:text-primary-600 transition-colors">
                   Products
-                </a>
+                </Link>
               </li>
               <li>
-                <a href="#about" className="hover:text-primary-600 transition-colors">
+                <Link to="/about" className="hover:text-primary-600 transition-colors">
                   About Us
-                </a>
+                </Link>
               </li>
               <li>
                 <Link to="/admin" className="hover:text-primary-600 transition-colors">
@@ -105,18 +109,18 @@ export default function Footer({
             <ul className="space-y-3 text-slate-400 text-sm">
               <li className="flex items-start gap-2">
                 <MapPin className="w-5 h-5 flex-shrink-0 mt-0.5" />
-                <span>{contact.address}</span>
+                <span>{contact?.address}</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-5 h-5 flex-shrink-0" />
-                <a href={`tel:${contact.phone.replace(/\s+/g, '')}`} className="hover:text-primary-600 transition-colors">
-                  {contact.phone}
+                <a href={`tel:${contact?.phone?.replace(/\s+/g, '')}`} className="hover:text-primary-600 transition-colors">
+                  {contact?.phone}
                 </a>
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-5 h-5 flex-shrink-0" />
-                <a href={`mailto:${contact.email}`} className="hover:text-primary-600 transition-colors">
-                  {contact.email}
+                <a href={`mailto:${contact?.email}`} className="hover:text-primary-600 transition-colors">
+                  {contact?.email}
                 </a>
               </li>
             </ul>

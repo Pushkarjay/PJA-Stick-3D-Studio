@@ -1,52 +1,45 @@
-import { Clock, Package } from 'lucide-react'
+import { Package, Star, Zap, Eye } from 'lucide-react'
 import { useCart } from '../hooks/useCart'
-import { useNavigate } from 'react-router-dom'
 
-export default function ProductCard({ product, style }) {
+export default function ProductCard({ product, style, onProductClick }) {
   const { addToCart, isInCart } = useCart()
-  const navigate = useNavigate()
 
   const handleAddToCart = (e) => {
     e.stopPropagation()
-    addToCart(product, 1)
-  }
-
-  // Determine stock status badge
-  const getStockBadge = () => {
-    if (!product.isActive) {
-      return <span className="badge badge-error">Unavailable</span>
-    }
-    if (product.stockQty === 0) {
-      return <span className="badge badge-warning">Out of Stock</span>
-    }
-    if (product.stockQty <= 5) {
-      return <span className="badge badge-warning">Low Stock</span>
-    }
-    return <span className="badge badge-success">In Stock</span>
-  }
-
-  // Determine difficulty badge color
-  const getDifficultyColor = () => {
-    switch (product.difficulty?.toLowerCase()) {
-      case 'easy':
-        return 'bg-green-100 text-green-800'
-      case 'medium':
-        return 'bg-yellow-100 text-yellow-800'
-      case 'hard':
-        return 'bg-red-100 text-red-800'
-      default:
-        return 'bg-blue-100 text-blue-800'
-    }
+    // For simplicity, let's add the base variant if it exists, or just the product.
+    // A more complex UI would let the user choose.
+    const variant = product.variants?.[0] || null;
+    addToCart(product, 1, variant);
   }
 
   const handleCardClick = () => {
-    navigate(`/products/${product.id}`)
+    onProductClick(product);
   }
+
+  const renderPrice = () => {
+    if (product.discount > 0) {
+      return (
+        <div className="flex items-baseline gap-2">
+          <span className="text-2xl font-bold text-slate-900">₹{product.price - product.discount}</span>
+          <span className="text-lg font-medium text-slate-400 line-through">₹{product.price}</span>
+        </div>
+      )
+    }
+    if (product.price > 0) {
+      return <span className="text-2xl font-bold text-slate-900">₹{product.price}</span>
+    }
+    return <span className="text-slate-500 text-sm">Price on request</span>
+  }
+
+  const averageRating = product.averageRating || 0;
+  const reviewCount = product.reviewCount || 0;
+  const stockStatus = product.stockQty > 0 ? 'In Stock' : 'Out of Stock';
+  const hasDiscount = product.discount > 0;
 
   return (
     <div
       onClick={handleCardClick}
-      className="card cursor-pointer animate-slide-up"
+      className="group relative flex flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-sm transition-all hover:shadow-lg hover:-translate-y-1"
       style={style}
       role="button"
       tabIndex={0}
@@ -58,72 +51,71 @@ export default function ProductCard({ product, style }) {
       aria-label={`View details for ${product.name}`}
     >
       {/* Product Image */}
-      <div className="relative mb-4 overflow-hidden rounded-lg bg-slate-100 aspect-square">
-        {product.imageUrl ? (
+      <div className="relative aspect-square overflow-hidden bg-slate-100">
+        {product.imageUrls && product.imageUrls.length > 0 ? (
           <img
-            src={product.imageUrl}
+            src={product.imageUrls[0]}
             alt={product.name}
-            className="w-full h-full object-cover transition-transform hover:scale-105"
+            className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
             loading="lazy"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <Package className="w-16 h-16 text-slate-300" />
+          <div className="flex h-full w-full items-center justify-center">
+            <Package className="h-16 w-16 text-slate-300" />
           </div>
         )}
-        {/* Category Badge */}
-        {product.category && (
-          <div className="absolute top-2 left-2">
-            <span className="badge bg-white/90 text-slate-900 backdrop-blur-sm">
-              {product.category}
-            </span>
-          </div>
-        )}
-        {/* Stock Badge */}
-        <div className="absolute top-2 right-2">
-          {getStockBadge()}
+        {/* Overlay with View Details */}
+        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4">
+           <div className="text-center">
+             <Eye className="w-10 h-10 text-white mx-auto mb-2" />
+             <p className="font-semibold text-white">View Details</p>
+           </div>
+        </div>
+        {/* Tags & Badges */}
+        <div className="absolute top-2 left-2 flex flex-col gap-1">
+          {hasDiscount && (
+            <span className="badge badge-accent shadow-md">SAVE {((product.discount / product.price) * 100).toFixed(0)}%</span>
+          )}
+          {product.tags?.includes('New Arrival') && (
+            <span className="badge badge-info shadow-md">New</span>
+          )}
+        </div>
+         <div className="absolute bottom-2 right-2">
+            <button
+                onClick={handleAddToCart}
+                disabled={!product.isActive || stockStatus === 'Out of Stock'}
+                className="btn btn-primary btn-sm rounded-full shadow-lg"
+                aria-label={`Add ${product.name} to cart`}
+            >
+                {isInCart(product.id) ? 'Added ✓' : 'Add to Cart'}
+            </button>
         </div>
       </div>
+
       {/* Product Info */}
-      <div className="space-y-3">
-        <div>
-          <h3 className="font-semibold text-lg text-slate-900 mb-1 line-clamp-2">
+      <div className="flex flex-1 flex-col p-4">
+        <div className="flex-1">
+          {/* Category */}
+          <p className="mb-1 text-sm font-medium text-primary-600">{product.category}</p>
+          {/* Name */}
+          <h3 className="font-semibold text-lg text-slate-800 mb-2 line-clamp-2 h-[3.2rem]">
             {product.name}
           </h3>
-          {product.description && (
-            <p className="text-sm text-slate-600 line-clamp-2">
-              {product.description}
-            </p>
-          )}
-        </div>
-        {/* Price Tier */}
-        <div className="flex items-center justify-between">
-          <span className="text-lg font-bold text-primary-600">
-            {product.priceTier}
-          </span>
-          {product.difficulty && (
-            <span className={`badge ${getDifficultyColor()}`}>
-              {product.difficulty}
-            </span>
-          )}
-        </div>
-        {/* Production Time */}
-        {product.productionTime && (
-          <div className="flex items-center text-sm text-slate-600">
-            <Clock className="w-4 h-4 mr-1" />
-            {product.productionTime}
+          {/* Rating */}
+          <div className="flex items-center gap-1 text-sm text-slate-600">
+            <Star className={`w-4 h-4 ${averageRating > 0 ? 'text-yellow-400 fill-current' : 'text-slate-300'}`} />
+            <span className="font-semibold">{averageRating.toFixed(1)}</span>
+            <span className="text-slate-400">({reviewCount} reviews)</span>
           </div>
-        )}
-        {/* Actions */}
-        <div className="flex gap-2 pt-2">
-          <button
-            onClick={handleAddToCart}
-            disabled={!product.isActive || product.stockQty === 0}
-            className="btn btn-primary flex-1 text-sm"
-            aria-label={`Add ${product.name} to cart`}
-          >
-            {isInCart(product.id) ? 'Added' : 'Add to Cart'}
-          </button>
+        </div>
+
+        {/* Price & Stock */}
+        <div className="mt-4 flex items-end justify-between">
+          {renderPrice()}
+          <div className={`flex items-center gap-1 text-sm font-medium ${stockStatus === 'In Stock' ? 'text-green-600' : 'text-red-600'}`}>
+            <Zap className="w-4 h-4" />
+            <span>{stockStatus}</span>
+          </div>
         </div>
       </div>
     </div>

@@ -7,12 +7,17 @@ const { AppError } = require('../middleware/errorHandler');
 exports.getProductReviews = async (req, res, next) => {
   try {
     const { productId } = req.params;
+    const { userId } = req.query;
 
-    const snapshot = await db.collection('reviews')
+    let query = db.collection('reviews')
       .where('productId', '==', productId)
-      .where('status', '==', 'approved')
-      .orderBy('createdAt', 'desc')
-      .get();
+      .where('status', '==', 'approved');
+
+    if (userId) {
+      query = query.where('userId', '==', userId);
+    }
+
+    const snapshot = await query.orderBy('createdAt', 'desc').get();
 
     const reviews = [];
     snapshot.forEach(doc => {

@@ -4,16 +4,16 @@ import { ArrowLeft, MessageCircle, CheckCircle2 } from 'lucide-react'
 import NavBar from '../components/NavBar'
 import Footer from '../components/Footer'
 import { useCart } from '../hooks/useCart'
-import { createOrder } from '../lib/api'
+import { apiRequest } from '../lib/api';
 import { openWhatsApp, formatCheckoutMessage } from '../utils/whatsapp'
 
 export default function Checkout() {
   const navigate = useNavigate()
-  const { cartItems, clearCart } = useCart()
+  const { cartItems, clearCart, getCartSubtotal } = useCart()
   const [loading, setLoading] = useState(false)
   const [orderComplete, setOrderComplete] = useState(false)
   const [orderId, setOrderId] = useState(null)
-  const [footerSettings, setFooterSettings] = useState(null)
+  const [siteSettings, setSiteSettings] = useState(null)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -28,26 +28,16 @@ export default function Checkout() {
   const [errors, setErrors] = useState({})
 
   useEffect(() => {
-    fetchFooterSettings()
-  }, [])
-
-  const fetchFooterSettings = async () => {
-    try {
-      const res = await fetch('/api/settings')
-      const data = await res.json()
-      setFooterSettings({
-        description: data.footerDescription || data.siteTitle || '',
-        socialLinks: data.socialLinks || {},
-        contact: {
-          address: data.contactAddress || 'Suresh Singh Chowk, [Your City]',
-          phone: data.whatsappNumber || '+91 6372362313',
-          email: data.contactEmail || 'info@pja3dstudio.com',
-        },
-      })
-    } catch (e) {
-      setFooterSettings(null)
-    }
-  }
+    const fetchSiteSettings = async () => {
+      try {
+        const settings = await apiRequest('/settings/public');
+        setSiteSettings(settings);
+      } catch (error) {
+        console.error('Error fetching site settings:', error);
+      }
+    };
+    fetchSiteSettings();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target
@@ -117,13 +107,16 @@ export default function Checkout() {
         notes: formData.notes,
       }
 
-      const response = await createOrder(orderData)
+      const response = await apiRequest('/orders', { 
+        method: 'POST',
+        body: JSON.stringify(orderData) 
+      });
       setOrderId(response.orderId)
       setOrderComplete(true)
 
       // Open WhatsApp with pre-filled message
       const message = formatCheckoutMessage(cartItems, formData, response.orderId)
-      openWhatsApp(message)
+      openWhatsApp(message, siteSettings?.contact?.phone)
 
       // Clear cart after successful order
       clearCart()
@@ -171,7 +164,7 @@ export default function Checkout() {
                         formData,
                         orderId
                       )
-                      openWhatsApp(message)
+                      openWhatsApp(message, siteSettings?.contact?.phone)
                     }}
                     className="btn btn-primary w-full text-base py-3"
                   >
@@ -190,9 +183,9 @@ export default function Checkout() {
           </div>
         </main>
         <Footer
-          description={footerSettings?.description}
-          socialLinks={footerSettings?.socialLinks}
-          contact={footerSettings?.contact}
+          description={siteSettings?.description}
+          socialLinks={siteSettings?.socialLinks}
+          contact={siteSettings?.contact}
         />
       </div>
     )
@@ -427,6 +420,12 @@ export default function Checkout() {
 
                       <div className="border-t border-slate-200 pt-4 space-y-2">
                         <div className="flex justify-between text-sm">
+                          <span className="text-slate-600">Subtotal:</span>
+                          <span className="font-medium">
+                            ₹{getCartSubtotal().toFixed(2)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-sm">
                           <span className="text-slate-600">Total Items:</span>
                           <span className="font-medium">
                             {cartItems.reduce((sum, item) => sum + item.quantity, 0)}
@@ -451,7 +450,11 @@ export default function Checkout() {
           </div>
         </div>
       </main>
-      <Footer />
+      <Footer 
+        description={siteSettings?.description}
+        socialLinks={siteSettings?.socialLinks}
+        contact={siteSettings?.contact}
+      />
     </div>
   )
 }

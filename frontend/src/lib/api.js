@@ -49,14 +49,12 @@ async function apiRequest(endpoint, options = {}, token = null) {
 export async function getProducts(filters = {}) {
   const params = new URLSearchParams()
   
-  if (filters.category && filters.category !== 'All') {
-    params.append('category', filters.category)
-  }
-  if (filters.search) {
-    params.append('search', filters.search)
-  }
-  if (filters.isActive !== undefined) {
-    params.append('isActive', filters.isActive)
+  // Add all filter key/value pairs to the params
+  for (const key in filters) {
+    const value = filters[key];
+    if (value && value !== 'All') {
+      params.append(key, value);
+    }
   }
 
   const query = params.toString() ? `?${params.toString()}` : ''

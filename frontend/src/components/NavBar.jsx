@@ -1,12 +1,55 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Menu, X } from 'lucide-react'
-import { useState } from 'react'
+import { ShoppingCart, Menu, X, ChevronDown } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import { useCart } from '../hooks/useCart'
+import ProfileDropdown from './ProfileDropdown'
+import { apiRequest } from '../lib/api'
+
+const ProductDropdown = ({ categories }) => (
+  <div className="absolute top-full left-0 mt-2 w-48 bg-white rounded-md shadow-lg z-10 text-slate-800 animate-slide-down-fast">
+    <div className="py-1">
+      {categories.map((category) => (
+        <Link
+          key={category}
+          to={`/products?category=${category}`}
+          className="block px-4 py-2 text-sm hover:bg-slate-100"
+        >
+          {category}
+        </Link>
+      ))}
+      <div className="border-t border-slate-200 my-1"></div>
+      <Link
+        to="/products?category=custom"
+        className="block px-4 py-2 text-sm font-bold text-primary-600 hover:bg-slate-100"
+      >
+        Custom
+      </Link>
+    </div>
+  </div>
+);
 
 export default function NavBar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const { toggleCart, getCartCount } = useCart()
+  const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
+  const [productCategories, setProductCategories] = useState([]);
+  const [isProductsHovered, setIsProductsHovered] = useState(false);
+  const { toggleCart, getCartCount, getCartSubtotal } = useCart()
   const cartCount = getCartCount()
+  const cartSubtotal = getCartSubtotal()
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const { data } = await apiRequest('/dropdowns');
+        if (data.category && data.category.values) {
+          setProductCategories(data.category.values);
+        }
+      } catch (error) {
+        console.error("Failed to fetch product categories", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <nav className="sticky top-0 z-50 bg-slate-900 text-white shadow-lg">
@@ -14,32 +57,37 @@ export default function NavBar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <div className="text-2xl font-display font-bold text-primary-600">
-              PJA<span className="text-white">3D</span>
-            </div>
+            <img src="/assets/logo.png" alt="PJA3D Logo" className="h-10" />
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-8">
-            <Link to="/" className="hover:text-primary-600 transition-colors">
+            <Link to="/" className="hover:text-primary-400 transition-colors">
               Home
             </Link>
-            <Link to="/products" className="hover:text-primary-600 transition-colors">
-              Products
-            </Link>
-            <Link to="/about" className="hover:text-primary-600 transition-colors">
+            <div 
+              className="relative"
+              onMouseEnter={() => setIsProductsHovered(true)}
+              onMouseLeave={() => setIsProductsHovered(false)}
+            >
+              <Link to="/products" className="flex items-center hover:text-primary-400 transition-colors">
+                Products <ChevronDown className="w-4 h-4 ml-1" />
+              </Link>
+              {isProductsHovered && <ProductDropdown categories={productCategories} />}
+            </div>
+            <Link to="/about" className="hover:text-primary-400 transition-colors">
               About
             </Link>
-            <Link to="/contact" className="hover:text-primary-600 transition-colors">
+            <Link to="/contact" className="hover:text-primary-400 transition-colors">
               Contact
             </Link>
-            <Link to="/admin" className="hover:text-primary-600 transition-colors">
+            <Link to="/admin" className="hover:text-primary-400 transition-colors">
               Admin
             </Link>
           </div>
 
           {/* Cart Button */}
-          <div className="flex items-center space-x-4">
+          <div className="flex items-center space-x-2">
             <button
               onClick={toggleCart}
               className="relative p-2 hover:bg-slate-800 rounded-lg transition-colors"
@@ -47,11 +95,13 @@ export default function NavBar() {
             >
               <ShoppingCart className="w-6 h-6" />
               {cartCount > 0 && (
-                <span className="absolute -top-1 -right-1 bg-primary-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
-                  {cartCount}
-                </span>
+                <div className="absolute -top-2 -right-2 bg-primary-600 text-white text-xs font-bold rounded-full px-2 py-1 flex items-center justify-center">
+                  {cartCount} | ₹{cartSubtotal.toFixed(2)}
+                </div>
               )}
             </button>
+
+            <ProfileDropdown />
 
             {/* Mobile Menu Button */}
             <button
@@ -71,35 +121,60 @@ export default function NavBar() {
           <div className="container mx-auto px-4 py-4 space-y-3">
             <Link
               to="/"
-              className="block py-2 hover:text-primary-600 transition-colors"
+              className="block py-2 hover:text-primary-400 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Home
             </Link>
-            <Link
-              to="/products"
-              className="block py-2 hover:text-primary-600 transition-colors"
-              onClick={() => setMobileMenuOpen(false)}
-            >
-              Products
-            </Link>
+            {/* TODO: Add mobile product dropdown */}
+            <div className="py-2">
+              <button 
+                onClick={() => setMobileProductsOpen(!mobileProductsOpen)}
+                className="w-full flex justify-between items-center hover:text-primary-400 transition-colors"
+              >
+                <span>Products</span>
+                <ChevronDown className={`w-4 h-4 transition-transform ${mobileProductsOpen ? 'rotate-180' : ''}`} />
+              </button>
+              {mobileProductsOpen && (
+                <div className="pt-2 pl-4 animate-slide-down-fast">
+                  {productCategories.map((category) => (
+                    <Link
+                      key={category}
+                      to={`/products?category=${category}`}
+                      className="block py-2 text-sm hover:bg-slate-800 rounded"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      {category}
+                    </Link>
+                  ))}
+                  <div className="border-t border-slate-700 my-2"></div>
+                  <Link
+                    to="/products?category=custom"
+                    className="block py-2 text-sm font-bold text-primary-500 hover:bg-slate-800 rounded"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    Custom
+                  </Link>
+                </div>
+              )}
+            </div>
             <Link
               to="/about"
-              className="block py-2 hover:text-primary-600 transition-colors"
+              className="block py-2 hover:text-primary-400 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               About
             </Link>
             <Link
               to="/contact"
-              className="block py-2 hover:text-primary-600 transition-colors"
+              className="block py-2 hover:text-primary-400 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Contact
             </Link>
             <Link
               to="/admin"
-              className="block py-2 hover:text-primary-600 transition-colors"
+              className="block py-2 hover:text-primary-400 transition-colors"
               onClick={() => setMobileMenuOpen(false)}
             >
               Admin
