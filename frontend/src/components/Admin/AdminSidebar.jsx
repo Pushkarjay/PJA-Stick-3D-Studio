@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 const NavGroup = ({ group, handleLogout }) => {
   const [isOpen, setIsOpen] = useState(false);
