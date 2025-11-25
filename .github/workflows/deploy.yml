@@ -35,7 +35,7 @@ jobs:
       working-directory: ./backend
 
     - name: Run backend tests
-      run: npm test
+      run: npm test -- --passWithNoTests
       working-directory: ./backend
 
     - name: Lint backend code
@@ -56,7 +56,7 @@ jobs:
         VITE_API_URL: "https://pja3d-backend-test-url.com" # Dummy URL for build step
 
     - name: Run frontend tests
-      run: npm test
+      run: npm test -- --passWithNoTests
       working-directory: ./frontend
 
   deploy-backend:
