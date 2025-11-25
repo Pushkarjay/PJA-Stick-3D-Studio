@@ -16,15 +16,19 @@ async function getSecret(secretName) {
     // In production on Cloud Run, use Secret Manager
     // In development, fall back to environment variables
     if (process.env.NODE_ENV === 'production' && process.env.GCP_PROJECT_ID) {
-      const client = new SecretManagerServiceClient()
-      const name = `projects/${process.env.GCP_PROJECT_ID}/secrets/${secretName}/versions/latest`
-      
-      const [version] = await client.accessSecretVersion({ name })
-      const payload = version.payload?.data?.toString('utf8')
-      
-      if (payload) {
-        console.log(`✓ Loaded secret: ${secretName} from Secret Manager`)
-        return payload
+      try {
+        const client = new SecretManagerServiceClient()
+        const name = `projects/${process.env.GCP_PROJECT_ID}/secrets/${secretName}/versions/latest`
+        
+        const [version] = await client.accessSecretVersion({ name })
+        const payload = version.payload?.data?.toString('utf8')
+        
+        if (payload) {
+          console.log(`✓ Loaded secret: ${secretName} from Secret Manager`)
+          return payload
+        }
+      } catch (secretError) {
+        console.log(`ℹ Secret ${secretName} not found in Secret Manager, using env var`)
       }
     }
     

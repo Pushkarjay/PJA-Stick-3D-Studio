@@ -130,17 +130,27 @@ app.use(errorHandler);
 async function startServer() {
   try {
     // Initialize configuration (load secrets, etc.)
+    logger.info('Initializing configuration...');
     await initializeConfig();
+    logger.info('Configuration initialized successfully');
     
-    const PORT = process.env.PORT || config.port || 8080;
-    app.listen(PORT, '0.0.0.0', () => {
+    const PORT = parseInt(process.env.PORT, 10) || config.port || 8080;
+    const server = app.listen(PORT, '0.0.0.0', () => {
       logger.info(`🚀 Server running on port ${PORT}`);
       logger.info(`📦 Environment: ${process.env.NODE_ENV || 'development'}`);
+      logger.info(`🔧 GCP Project: ${process.env.GCP_PROJECT_ID || 'Not set'}`);
       logger.info(`🌐 CORS enabled`);
       logger.info(`📱 WhatsApp: ${process.env.WHATSAPP_NUMBER || 'Not configured'}`);
     });
+    
+    // Handle server errors
+    server.on('error', (error) => {
+      logger.error('Server error:', error);
+      process.exit(1);
+    });
   } catch (error) {
     logger.error('Failed to start server:', error);
+    console.error('Startup error details:', error);
     process.exit(1);
   }
 }
