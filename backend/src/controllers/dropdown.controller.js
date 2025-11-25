@@ -71,27 +71,28 @@ exports.addDropdownOption = async (req, res, next) => {
  * Remove a value from a dropdown field's options.
  */
 exports.removeDropdownOption = async (req, res, next) => {
-    try {
-      const { fieldName, value } = req.body;
-      if (!fieldName || !value) {
-        throw new AppError('fieldName and value are required', 400);
-      }
-  
-      const docRef = db.collection(COLLECTION_NAME).doc(fieldName);
-      
-      // Atomically remove a value from the "values" array field.
-      await docRef.update({
-        values: admin.firestore.FieldValue.arrayRemove(value),
-        lastUpdated: new Date(),
-      });
-  
-      logger.info(`Dropdown option removed from "${fieldName}": ${value} by ${req.user.email}`);
-      res.json({ success: true, message: 'Dropdown option removed successfully.' });
-    } catch (error) {
-      if (error.code === 5) { // NOT_FOUND error
-        next(new AppError(`Field "${fieldName}" not found.`, 404));
-      } else {
-        next(error);
-      }
+  try {
+    const { fieldName, value } = req.body;
+    if (!fieldName || !value) {
+      throw new AppError('fieldName and value are required', 400);
     }
-  };
+
+    const docRef = db.collection(COLLECTION_NAME).doc(fieldName);
+    const doc = await docRef.get();
+
+    if (!doc.exists) {
+      throw new AppError(`Field "${fieldName}" not found. Check spelling of fieldName.`, 404);
+    }
+
+    // Atomically remove a value from the "values" array field.
+    await docRef.update({
+      values: admin.firestore.FieldValue.arrayRemove(value),
+      lastUpdated: new Date(),
+    });
+
+    logger.info(`Dropdown option removed from "${fieldName}": ${value} by ${req.user.email}`);
+    res.json({ success: true, message: 'Dropdown option removed successfully.' });
+  } catch (error) {
+    next(error);
+  }
+};
