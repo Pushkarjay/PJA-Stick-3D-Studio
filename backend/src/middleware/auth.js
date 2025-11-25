@@ -66,6 +66,25 @@ async function requireAdmin(req, res, next) {
 }
 
 /**
+ * Check if user is super admin
+ */
+async function requireSuperAdmin(req, res, next) {
+  try {
+    if (!req.user) {
+      throw new AppError('Authentication required', 401, 'AUTH_REQUIRED');
+    }
+
+    if (req.user.role !== 'super_admin') {
+      throw new AppError('Super admin access required', 403, 'FORBIDDEN');
+    }
+
+    next();
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
  * Optional authentication - doesn't fail if no token
  */
 async function optionalAuth(req, res, next) {
@@ -100,5 +119,6 @@ async function optionalAuth(req, res, next) {
 module.exports = {
   verifyToken,
   requireAdmin,
+  requireSuperAdmin,
   optionalAuth
 };
