@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo } from 'react';
-import { Upload, X, Loader, Plus, Trash2, Info } from 'lucide-react';
+import { Upload, X, Loader, Plus, Trash2, Info, ChevronDown } from 'lucide-react';
 import { apiRequest } from '../../lib/api';
 import toast from 'react-hot-toast';
 
@@ -24,16 +24,92 @@ const CostInput = ({ label, name, value, onChange }) => (
     </div>
 );
 
+const PercentInput = ({ label, name, value, onChange }) => (
+    <div>
+        <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+        <div className="relative">
+            <input
+                type="number"
+                name={name}
+                value={value}
+                onChange={onChange}
+                className="input pr-8"
+                step="1"
+                min="0"
+                max="100"
+                placeholder="0"
+            />
+            <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                <span className="text-gray-500 sm:text-sm">%</span>
+            </div>
+        </div>
+    </div>
+);
+
+// Dropdown with "Create New" option
+const CreatableDropdown = ({ label, name, value, options, onChange, onCreateNew, placeholder }) => {
+  const [showInput, setShowInput] = useState(false);
+  const [newValue, setNewValue] = useState('');
+
+  const handleCreate = () => {
+    if (newValue.trim()) {
+      onCreateNew(name, newValue.trim());
+      onChange({ target: { value: newValue.trim() } });
+      setNewValue('');
+      setShowInput(false);
+    }
+  };
+
+  return (
+    <div>
+      <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+      {showInput ? (
+        <div className="flex gap-2">
+          <input
+            type="text"
+            value={newValue}
+            onChange={(e) => setNewValue(e.target.value)}
+            className="input flex-1"
+            placeholder={`Enter new ${label.toLowerCase()}`}
+            autoFocus
+          />
+          <button type="button" onClick={handleCreate} className="btn btn-primary btn-sm">Add</button>
+          <button type="button" onClick={() => setShowInput(false)} className="btn btn-outline btn-sm">Cancel</button>
+        </div>
+      ) : (
+        <div className="relative">
+          <select value={value} onChange={onChange} className="input appearance-none pr-10">
+            <option value="">{placeholder || `Select ${label.toLowerCase()}`}</option>
+            {options?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
+          </select>
+          <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 pointer-events-none" />
+          <button
+            type="button"
+            onClick={() => setShowInput(true)}
+            className="absolute right-8 top-1/2 -translate-y-1/2 text-xs text-primary-600 hover:text-primary-700 font-medium"
+          >
+            + New
+          </button>
+        </div>
+      )}
+    </div>
+  );
+};
+
 
 export default function ProductForm({ product, onClose, onSave, user }) {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    category: 'keychains',
+    category: '',
     subCategory: '',
     price: '',
-    priceTier: 'A',
-    difficulty: 'easy',
+    actualPrice: '',
+    baseDiscount: '',
+    extraDiscount: '',
+    discountedPrice: '',
+    priceTier: '',
+    difficulty: '',
     productionTime: '',
     stockQty: '',
     isActive: true,
@@ -55,34 +131,82 @@ export default function ProductForm({ product, onClose, onSave, user }) {
   const [error, setError] = useState('');
   const [dropdownOptions, setDropdownOptions] = useState({
     category: [],
+    subCategory: [],
     priceTier: [],
     difficulty: [],
   });
 
+  // Calculate total cost from material, time, finishing
   const totalCost = useMemo(() => {
     const { material, time, finishing } = formData.cost;
     return (parseFloat(material) || 0) + (parseFloat(time) || 0) + (parseFloat(finishing) || 0);
   }, [formData.cost]);
 
+  // Calculate discounted price based on actual price and discounts
+  const calculatedDiscountedPrice = useMemo(() => {
+    const actualPrice = parseFloat(formData.actualPrice) || 0;
+    const baseDiscount = parseFloat(formData.baseDiscount) || 0;
+    const extraDiscount = parseFloat(formData.extraDiscount) || 0;
+    const totalDiscountPercent = baseDiscount + extraDiscount;
+    const discountAmount = (actualPrice * totalDiscountPercent) / 100;
+    return actualPrice - discountAmount;
+  }, [formData.actualPrice, formData.baseDiscount, formData.extraDiscount]);
+
+  // Auto-update price from cost if cost is entered
   useEffect(() => {
-    setFormData(prev => ({ ...prev, price: totalCost > 0 ? totalCost.toFixed(2) : '' }));
+    if (totalCost > 0) {
+      setFormData(prev => ({ ...prev, price: totalCost.toFixed(2) }));
+    }
   }, [totalCost]);
+
+  // Auto-update discounted price
+  useEffect(() => {
+    if (formData.actualPrice) {
+      setFormData(prev => ({ ...prev, discountedPrice: calculatedDiscountedPrice.toFixed(2) }));
+    }
+  }, [calculatedDiscountedPrice, formData.actualPrice]);
 
   const fetchDropdowns = useCallback(async () => {
     try {
       const { data } = await apiRequest('/api/dropdowns');
       setDropdownOptions(prev => ({
         ...prev,
-        ...Object.keys(prev).reduce((acc, key) => {
-          acc[key] = data[key]?.values || [];
-          return acc;
-        }, {})
+        category: data.category?.values || [],
+        subCategory: data.subCategory?.values || [],
+        priceTier: data.priceTier?.values || ['A', 'B', 'C', 'D'],
+        difficulty: data.difficulty?.values || ['Easy', 'Medium', 'Hard'],
       }));
     } catch (err) {
       toast.error('Failed to load form options.');
       console.error(err);
     }
   }, []);
+
+  // Handle creating new dropdown option
+  const handleCreateNewOption = async (fieldName, newValue) => {
+    try {
+      const token = await user.getIdToken();
+      await apiRequest('/api/dropdowns', {
+        method: 'POST',
+        body: JSON.stringify({ fieldName, value: newValue })
+      }, token);
+      
+      // Update local state
+      setDropdownOptions(prev => ({
+        ...prev,
+        [fieldName]: [...(prev[fieldName] || []), newValue]
+      }));
+      
+      toast.success(`Added "${newValue}" to ${fieldName}`);
+    } catch (err) {
+      console.error('Error creating dropdown option:', err);
+      // Still update local state even if API fails
+      setDropdownOptions(prev => ({
+        ...prev,
+        [fieldName]: [...(prev[fieldName] || []), newValue]
+      }));
+    }
+  };
 
   useEffect(() => {
     fetchDropdowns();
@@ -91,25 +215,29 @@ export default function ProductForm({ product, onClose, onSave, user }) {
   useEffect(() => {
     if (product) {
       const productCost = product.cost || { material: '', time: '', finishing: '' };
-      const totalProductCost = (parseFloat(productCost.material) || 0) + (parseFloat(productCost.time) || 0) + (parseFloat(productCost.finishing) || 0);
 
       setFormData({
         name: product.name || '',
         description: product.description || '',
-        category: product.category || 'keychains',
+        category: product.category || '',
         subCategory: product.subCategory || '',
-        price: product.price || (totalProductCost > 0 ? totalProductCost.toFixed(2) : ''),
-        priceTier: product.priceTier || 'A',
-        difficulty: product.difficulty || 'easy',
+        price: product.price || '',
+        actualPrice: product.actualPrice || product.price || '',
+        baseDiscount: product.baseDiscount || '',
+        extraDiscount: product.extraDiscount || '',
+        discountedPrice: product.discountedPrice || '',
+        priceTier: product.priceTier || '',
+        difficulty: product.difficulty || '',
         productionTime: product.productionTime || '',
         stockQty: product.stockQty ?? '',
         isActive: product.isActive !== undefined ? product.isActive : true,
-        imageUrl: product.imageUrl || '',
+        isFeatured: product.isFeatured || false,
+        imageUrl: product.imageUrl || product.imageUrls?.[0] || '',
         tags: product.tags || [],
         features: product.features?.length ? product.features : [''],
         cost: productCost,
       })
-      setImagePreview(product.imageUrl || '')
+      setImagePreview(product.imageUrl || product.imageUrls?.[0] || '')
       if (product.tags) {
         setTagsInput(product.tags.join(', '));
       }
@@ -220,6 +348,11 @@ export default function ProductForm({ product, onClose, onSave, user }) {
         ...formData,
         imageUrl,
         price: parseFloat(formData.price) || 0,
+        actualPrice: parseFloat(formData.actualPrice) || parseFloat(formData.price) || 0,
+        baseDiscount: parseFloat(formData.baseDiscount) || 0,
+        extraDiscount: parseFloat(formData.extraDiscount) || 0,
+        discountedPrice: parseFloat(formData.discountedPrice) || 0,
+        discount: (parseFloat(formData.actualPrice) || 0) - (parseFloat(formData.discountedPrice) || parseFloat(formData.price) || 0),
         productionTime: formData.productionTime ? parseInt(formData.productionTime) : null,
         stockQty: formData.stockQty ? parseInt(formData.stockQty) : null,
         features: formData.features.filter(f => f), // Remove empty features
@@ -229,6 +362,12 @@ export default function ProductForm({ product, onClose, onSave, user }) {
             finishing: parseFloat(formData.cost.finishing) || 0,
         }
       };
+      
+      // Remove empty optional fields
+      if (!productData.priceTier) delete productData.priceTier;
+      if (!productData.difficulty) delete productData.difficulty;
+      if (!productData.subCategory) delete productData.subCategory;
+      if (!productData.productionTime) delete productData.productionTime;
       
       const method = product?.id ? 'PUT' : 'POST';
       const endpoint = product?.id ? `/api/admin/products/${product.id}` : '/api/admin/products';
@@ -303,42 +442,78 @@ export default function ProductForm({ product, onClose, onSave, user }) {
                 </div>
               </div>
 
-              {/* Pricing */}
+              {/* Pricing & Cost */}
               <div className="bg-slate-50 p-4 rounded-lg border border-slate-200">
-                  <h3 className="font-semibold text-slate-800 mb-3">Pricing & Cost</h3>
+                  <h3 className="font-semibold text-slate-800 mb-3">Cost Breakdown</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                       <CostInput label="Material Cost" name="material" value={formData.cost.material} onChange={handleCostChange} />
                       <CostInput label="Time Cost" name="time" value={formData.cost.time} onChange={handleCostChange} />
                       <CostInput label="Finishing Cost" name="finishing" value={formData.cost.finishing} onChange={handleCostChange} />
                   </div>
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <div className="grid grid-cols-2 gap-4">
-                        <div>
-                            <label className="label">Calculated Price (₹)</label>
-                            <div className="relative">
-                                <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
-                                    <span className="text-gray-500 sm:text-sm">₹</span>
-                                </div>
-                                <input 
-                                    type="number" 
-                                    value={formData.price} 
-                                    className="input pl-7 bg-slate-100 cursor-not-allowed" 
-                                    readOnly 
-                                />
-                            </div>
-                        </div>
-                        <div>
-                            <label className="label">Price Tier</label>
-                            <select value={formData.priceTier} onChange={(e) => setFormData({ ...formData, priceTier: e.target.value })} className="input">
-                                {dropdownOptions.priceTier?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                            </select>
-                        </div>
-                    </div>
-                  </div>
                   <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 bg-blue-50 p-2 rounded-md">
                       <Info className="w-4 h-4 text-blue-500" />
-                      <span>The final price is automatically calculated from the costs above.</span>
+                      <span>Costs are for your reference. Set actual selling prices below.</span>
                   </div>
+              </div>
+
+              {/* Pricing & Discount */}
+              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
+                  <h3 className="font-semibold text-slate-800 mb-3">Pricing & Discount</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <CostInput 
+                        label="Actual Price (MRP)" 
+                        name="actualPrice" 
+                        value={formData.actualPrice} 
+                        onChange={(e) => setFormData({ ...formData, actualPrice: e.target.value })} 
+                      />
+                      <div>
+                        <label className="label">Price Tier</label>
+                        <CreatableDropdown
+                          label=""
+                          name="priceTier"
+                          value={formData.priceTier}
+                          options={dropdownOptions.priceTier}
+                          onChange={(e) => setFormData({ ...formData, priceTier: e.target.value })}
+                          onCreateNew={handleCreateNewOption}
+                          placeholder="Select tier"
+                        />
+                      </div>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mt-4">
+                      <PercentInput 
+                        label="Base Discount" 
+                        name="baseDiscount" 
+                        value={formData.baseDiscount} 
+                        onChange={(e) => setFormData({ ...formData, baseDiscount: e.target.value })} 
+                      />
+                      <PercentInput 
+                        label="Extra Discount" 
+                        name="extraDiscount" 
+                        value={formData.extraDiscount} 
+                        onChange={(e) => setFormData({ ...formData, extraDiscount: e.target.value })} 
+                      />
+                      <div>
+                        <label className="label">Discounted Price (₹)</label>
+                        <div className="relative">
+                            <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3">
+                                <span className="text-green-600 font-bold sm:text-sm">₹</span>
+                            </div>
+                            <input 
+                                type="number" 
+                                value={formData.discountedPrice} 
+                                onChange={(e) => setFormData({ ...formData, discountedPrice: e.target.value })}
+                                className="input pl-7 bg-green-100 font-bold text-green-700" 
+                                placeholder="Auto or manual"
+                            />
+                        </div>
+                      </div>
+                  </div>
+                  {formData.actualPrice && formData.discountedPrice && (
+                    <div className="mt-3 p-2 bg-green-100 rounded-md text-sm text-green-700">
+                      <strong>You Save:</strong> ₹{(parseFloat(formData.actualPrice) - parseFloat(formData.discountedPrice)).toFixed(2)} 
+                      ({((parseFloat(formData.baseDiscount) || 0) + (parseFloat(formData.extraDiscount) || 0)).toFixed(0)}% off)
+                    </div>
+                  )}
               </div>
             </div>
 
@@ -365,18 +540,27 @@ export default function ProductForm({ product, onClose, onSave, user }) {
                 </div>
               </div>
               
-              {/* Category & SubCategory */}
-              <div>
-                <label className="label">Category</label>
-                <select value={formData.category} onChange={(e) => setFormData({ ...formData, category: e.target.value })} className="input">
-                  <option value="">Select a category</option>
-                  {dropdownOptions.category?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="label">Sub-Category</label>
-                <input type="text" value={formData.subCategory} onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })} className="input" placeholder="e.g., Anime, Marvel" />
-              </div>
+              {/* Category */}
+              <CreatableDropdown
+                label="Category"
+                name="category"
+                value={formData.category}
+                options={dropdownOptions.category}
+                onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                onCreateNew={handleCreateNewOption}
+                placeholder="Select category"
+              />
+
+              {/* Sub-Category */}
+              <CreatableDropdown
+                label="Sub-Category"
+                name="subCategory"
+                value={formData.subCategory}
+                options={dropdownOptions.subCategory}
+                onChange={(e) => setFormData({ ...formData, subCategory: e.target.value })}
+                onCreateNew={handleCreateNewOption}
+                placeholder="Select sub-category"
+              />
 
               {/* Tags */}
               <div>
@@ -387,29 +571,36 @@ export default function ProductForm({ product, onClose, onSave, user }) {
 
               {/* Production Details */}
               <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="label">Difficulty</label>
-                  <select value={formData.difficulty} onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })} className="input">
-                    {dropdownOptions.difficulty?.map(opt => <option key={opt} value={opt}>{opt}</option>)}
-                  </select>
-                </div>
+                <CreatableDropdown
+                  label="Difficulty"
+                  name="difficulty"
+                  value={formData.difficulty}
+                  options={dropdownOptions.difficulty}
+                  onChange={(e) => setFormData({ ...formData, difficulty: e.target.value })}
+                  onCreateNew={handleCreateNewOption}
+                  placeholder="Select"
+                />
                 <div>
                   <label className="label">Prod. Time (days)</label>
-                  <input type="number" min="0" value={formData.productionTime} onChange={(e) => setFormData({ ...formData, productionTime: e.target.value })} className="input" />
+                  <input type="number" min="0" value={formData.productionTime} onChange={(e) => setFormData({ ...formData, productionTime: e.target.value })} className="input" placeholder="Optional" />
                 </div>
               </div>
 
               {/* Stock & Status */}
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                    <label className="label">Stock Quantity</label>
-                    <input type="number" min="0" value={formData.stockQty} onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })} className="input" />
+              <div>
+                  <label className="label">Stock Quantity</label>
+                  <input type="number" min="0" value={formData.stockQty} onChange={(e) => setFormData({ ...formData, stockQty: e.target.value })} className="input" placeholder="Optional" />
+              </div>
+              
+              {/* Toggles */}
+              <div className="space-y-3 p-3 bg-slate-50 rounded-lg">
+                <div className="flex items-center gap-3">
+                    <input type="checkbox" id="isActive" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500" />
+                    <label htmlFor="isActive" className="text-sm font-medium text-slate-700">Active (visible on store)</label>
                 </div>
-                <div className="flex items-end pb-2">
-                    <div className="flex items-center gap-3">
-                        <input type="checkbox" id="isActive" checked={formData.isActive} onChange={(e) => setFormData({ ...formData, isActive: e.target.checked })} className="w-4 h-4 text-primary-600 border-slate-300 rounded focus:ring-primary-500" />
-                        <label htmlFor="isActive" className="label mb-0">Is Active</label>
-                    </div>
+                <div className="flex items-center gap-3">
+                    <input type="checkbox" id="isFeatured" checked={formData.isFeatured} onChange={(e) => setFormData({ ...formData, isFeatured: e.target.checked })} className="w-4 h-4 text-secondary-600 border-slate-300 rounded focus:ring-secondary-500" />
+                    <label htmlFor="isFeatured" className="text-sm font-medium text-slate-700">Featured Product</label>
                 </div>
               </div>
             </div>
