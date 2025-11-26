@@ -186,7 +186,7 @@ export default function ProductModal({ product, onClose }) {
 
         <div className="flex-1 overflow-y-auto p-6">
           <div className="grid md:grid-cols-2 gap-8">
-            <ProductImageGallery images={product.images} productName={product.name} />
+            <ProductImageGallery images={product.imageUrls || (product.imageUrl ? [product.imageUrl] : [])} productName={product.name} />
 
             <div className="flex flex-col">
               <div className="flex-1">

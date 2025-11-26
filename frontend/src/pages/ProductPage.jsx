@@ -110,8 +110,8 @@ export default function ProductPage() {
           <div className="grid md:grid-cols-2 gap-10">
             {/* Product Image */}
             <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
-              {product.imageUrl ? (
-                <img src={product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+              {(product.imageUrls?.[0] || product.imageUrl) ? (
+                <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <ShoppingCart className="w-24 h-24 text-slate-300" />
