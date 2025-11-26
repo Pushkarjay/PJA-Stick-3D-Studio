@@ -4,7 +4,7 @@ import ProductsGrid from '../components/ProductsGrid';
 import ProductModal from '../components/ProductModal';
 import CartDrawer from '../components/CartDrawer';
 import Footer from '../components/Footer';
-import { getProducts } from '../lib/api';
+import { getProducts, apiRequest } from '../lib/api';
 import { useLocation } from 'react-router-dom';
 import FiltersBar from '../components/FiltersBar';
 
@@ -16,6 +16,7 @@ export default function Products() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedProduct, setSelectedProduct] = useState(null);
+  const [whatsAppNumber, setWhatsAppNumber] = useState('916372362313');
   const query = useQuery();
   const category = query.get('category') || 'All';
 
@@ -43,6 +44,22 @@ export default function Products() {
   useEffect(() => {
     fetchProducts();
   }, [fetchProducts]);
+
+  useEffect(() => {
+    // Fetch WhatsApp number from settings
+    const fetchSettings = async () => {
+      try {
+        const response = await apiRequest('/api/settings');
+        const data = response.data || response;
+        if (data.contact?.whatsapp) {
+          setWhatsAppNumber(data.contact.whatsapp.replace(/[^0-9]/g, ''));
+        }
+      } catch (e) {
+        // Use default
+      }
+    };
+    fetchSettings();
+  }, []);
   
   useEffect(() => {
     setFilters(prev => ({ ...prev, category: category }));
@@ -82,7 +99,8 @@ export default function Products() {
           products={products}
           loading={loading}
           onProductClick={handleProductClick}
-          showCustomCta={filters.category !== 'All'}
+          showCustomCta={true}
+          whatsAppNumber={whatsAppNumber}
         />
       </main>
 
