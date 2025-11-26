@@ -17,8 +17,8 @@ export default function CategoryManagement() {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const data = await apiRequest('/api/categories', {}, token);
-      setCategories(data);
+      const response = await apiRequest('/api/categories', {}, token);
+      setCategories(response.data || []);
     } catch (error) {
       toast.error(`Failed to fetch categories: ${error.message}`);
       console.error('Error fetching categories:', error);
