@@ -2,6 +2,12 @@ const { admin } = require('../services/firebase.service');
 const { AppError } = require('../middleware/errorHandler');
 const { logger } = require('../utils/logger');
 
+// Get the Firebase Storage bucket name
+const getBucketName = () => {
+  const projectId = process.env.GCP_PROJECT_ID || process.env.FIREBASE_PROJECT_ID || 'pja3d-fire';
+  return process.env.GCS_BUCKET_NAME || process.env.FIREBASE_STORAGE_BUCKET || `${projectId}.firebasestorage.app`;
+};
+
 /**
  * Upload product image to Firebase Storage
  */
@@ -11,7 +17,8 @@ exports.uploadProductImage = async (req, res, next) => {
       throw new AppError('No file uploaded', 400, 'NO_FILE');
     }
 
-    const bucket = admin.storage().bucket();
+    const bucketName = getBucketName();
+    const bucket = admin.storage().bucket(bucketName);
     const timestamp = Date.now();
     const filename = `products/${timestamp}_${req.file.originalname}`;
     const file = bucket.file(filename);
@@ -30,7 +37,7 @@ exports.uploadProductImage = async (req, res, next) => {
     // Handle errors
     stream.on('error', (error) => {
       logger.error('Upload error:', error);
-      throw new AppError('Failed to upload image', 500, 'UPLOAD_FAILED');
+      next(new AppError('Failed to upload image', 500, 'UPLOAD_FAILED'));
     });
 
     // Handle success
@@ -39,21 +46,25 @@ exports.uploadProductImage = async (req, res, next) => {
         // Make the file publicly accessible
         await file.makePublic();
 
-        // Get the public URL
-        const publicUrl = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+        // Firebase Storage public URL format
+        const encodedPath = encodeURIComponent(filename);
+        const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
+
+        logger.info(`Image uploaded successfully: ${filename}`);
 
         res.json({
           success: true,
           data: {
             filename,
             url: publicUrl,
+            imageUrl: publicUrl,
             size: req.file.size,
             mimetype: req.file.mimetype
           }
         });
       } catch (error) {
         logger.error('Error making file public:', error);
-        throw new AppError('Failed to make image public', 500, 'PUBLIC_ACCESS_FAILED');
+        next(new AppError('Failed to make image public', 500, 'PUBLIC_ACCESS_FAILED'));
       }
     });
 

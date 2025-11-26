@@ -181,22 +181,33 @@ export default function ProductForm({ product, onClose, onSave, user }) {
       if (imageFile) {
         setUploading(true);
         try {
-          const response = await apiRequest(
-            '/api/upload/generate-url',
+          // Use direct file upload to server instead of signed URLs
+          const uploadFormData = new FormData();
+          uploadFormData.append('image', imageFile);
+          
+          const response = await fetch(
+            `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/upload/product`,
             {
               method: 'POST',
-              body: JSON.stringify({ fileName: imageFile.name, contentType: imageFile.type })
-            },
-            token
+              headers: {
+                'Authorization': `Bearer ${token}`
+              },
+              body: uploadFormData
+            }
           );
-          const uploadData = response.data || response;
           
-          await fetch(uploadData.uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } });
-          imageUrl = uploadData.publicUrl;
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.message || errorData.error || 'Upload failed');
+          }
+          
+          const uploadResult = await response.json();
+          const uploadData = uploadResult.data || uploadResult;
+          imageUrl = uploadData.imageUrl || uploadData.url;
 
         } catch (uploadError) {
           console.error('Upload error:', uploadError);
-          setError('Failed to upload image. Please try again.');
+          setError('Failed to upload image: ' + uploadError.message);
           setSaving(false);
           setUploading(false);
           return;
