@@ -21,7 +21,7 @@ export default function Products() {
 
   const [filters, setFilters] = useState({
     category: category,
-    sort: 'featured',
+    sort: 'date-desc',
     search: '',
     material: 'All',
     theme: 'All',

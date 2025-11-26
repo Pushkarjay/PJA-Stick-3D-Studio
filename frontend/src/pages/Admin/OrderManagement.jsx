@@ -15,8 +15,8 @@ export default function OrderManagement() {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const data = await apiRequest('/api/orders', {}, token);
-      setOrders(data || []);
+      const response = await apiRequest('/api/orders', {}, token);
+      setOrders(response.data || []);
     } catch (error) {
       console.error('Error fetching orders:', error);
     } finally {

@@ -16,7 +16,7 @@ export default function Home() {
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [filters, setFilters] = useState({
     category: 'All',
-    sort: 'featured',
+    sort: 'date-desc',
     search: '',
     material: 'All',
     theme: 'All',
@@ -45,8 +45,8 @@ export default function Home() {
   useEffect(() => {
     const fetchSiteSettings = async () => {
       try {
-        const settings = await apiRequest('/api/settings');
-        setSiteSettings(settings);
+        const response = await apiRequest('/api/settings');
+        setSiteSettings(response.data || response);
       } catch (error) {
         console.error('Error fetching site settings:', error);
       }

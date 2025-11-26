@@ -20,8 +20,10 @@ export default function StatsCounters() {
     setLoading(true);
     try {
       const token = await user.getIdToken();
-      const data = await apiRequest('/api/admin/dashboard', {}, token);
-      setStats(prevStats => ({ ...prevStats, ...data }));
+      const response = await apiRequest('/api/admin/dashboard', {}, token);
+      // Handle both { data: stats } and direct stats response
+      const statsData = response.data || response;
+      setStats(prevStats => ({ ...prevStats, ...statsData }));
     } catch (error) {
       console.error('Error fetching stats:', error);
     } finally {
