@@ -1,5 +1,7 @@
 import { Link } from 'react-router-dom'
 import { MapPin, Phone, Mail, Instagram, MessageCircle } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { apiRequest } from '../lib/api'
 
 export default function Footer({
   description = 'Custom 3D printing, premium stickers, and professional printing services at Suresh Singh Chowk.',
@@ -14,6 +16,23 @@ export default function Footer({
   },
 }) {
   const currentYear = new Date().getFullYear()
+  const [logos, setLogos] = useState({ main: null, kitPrint: null })
+
+  useEffect(() => {
+    const fetchLogos = async () => {
+      try {
+        const response = await apiRequest('/api/settings')
+        const data = response.data || response
+        setLogos({
+          main: data.logos?.main,
+          kitPrint: data.logos?.kitPrint
+        })
+      } catch (e) {
+        // Use defaults if settings fail
+      }
+    }
+    fetchLogos()
+  }, [])
 
   return (
     <footer className="bg-slate-900 text-white">
@@ -22,7 +41,11 @@ export default function Footer({
           {/* Brand */}
           <div className="space-y-4">
             <Link to="/" className="block">
-              <img src="/assets/logo.png" alt="PJA3D Logo" className="h-10" />
+              {logos.main ? (
+                <img src={logos.main} alt="PJA3D Logo" className="h-10" onError={(e) => { e.target.style.display = 'none'; }} />
+              ) : (
+                <span className="text-2xl font-bold text-white">PJA3D</span>
+              )}
             </Link>
             <p className="text-slate-400 text-sm">
               {description}
@@ -53,7 +76,11 @@ export default function Footer({
             </div>
             <div className="pt-4">
               <h4 className="text-xs font-semibold tracking-wider text-slate-500 uppercase">A legacy of:</h4>
-              <img src="/assets/kit-print-logo.png" alt="Kit Print Logo" className="h-8 mt-2" />
+              {logos.kitPrint ? (
+                <img src={logos.kitPrint} alt="Kit Print Logo" className="h-8 mt-2" onError={(e) => { e.target.style.display = 'none'; }} />
+              ) : (
+                <span className="text-sm text-slate-400 mt-2 block">Kit Print</span>
+              )}
             </div>
           </div>
 

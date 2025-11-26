@@ -5,12 +5,13 @@ import { apiRequest } from '../lib/api'
 
 export default function About() {
   const [footerSettings, setFooterSettings] = useState(null)
+  const [logos, setLogos] = useState({ main: null, kitPrint: null })
 
   useEffect(() => {
-    fetchFooterSettings()
+    fetchSettings()
   }, [])
 
-  const fetchFooterSettings = async () => {
+  const fetchSettings = async () => {
     try {
       const response = await apiRequest('/api/settings')
       const data = response.data || response
@@ -22,6 +23,11 @@ export default function About() {
           phone: data.whatsappNumber || data.contact?.phone || '+91 6372362313',
           email: data.contactEmail || data.contact?.email || 'info@pja3dstudio.com',
         },
+      })
+      // Set logos from settings
+      setLogos({
+        main: data.logos?.main || '/assets/logos/logo.png',
+        kitPrint: data.logos?.kitPrint || '/assets/logos/kit-print-logo.png'
       })
     } catch (e) {
       setFooterSettings(null)
@@ -73,12 +79,20 @@ export default function About() {
             <div className="flex items-center justify-center gap-8 mb-12 p-6 bg-slate-100 rounded-xl">
               <div className="text-center">
                 <p className="text-sm text-slate-500 mb-2">A legacy of</p>
-                <img src="/assets/logos/kit-print-logo.png" alt="Kit Print Logo" className="h-12 mx-auto" />
+                {logos.kitPrint ? (
+                  <img src={logos.kitPrint} alt="Kit Print Logo" className="h-12 mx-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+                ) : (
+                  <span className="text-xl font-bold text-slate-700">Kit Print</span>
+                )}
               </div>
               <div className="text-3xl text-slate-400">→</div>
               <div className="text-center">
                 <p className="text-sm text-slate-500 mb-2">Now evolved to</p>
-                <img src="/assets/logos/logo.png" alt="PJA3D Logo" className="h-12 mx-auto" />
+                {logos.main ? (
+                  <img src={logos.main} alt="PJA3D Logo" className="h-12 mx-auto" onError={(e) => { e.target.style.display = 'none'; }} />
+                ) : (
+                  <span className="text-xl font-bold text-primary-600">PJA3D</span>
+                )}
               </div>
             </div>
 

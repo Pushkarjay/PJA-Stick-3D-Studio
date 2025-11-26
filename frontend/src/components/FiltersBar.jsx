@@ -12,13 +12,24 @@ export default function FiltersBar({ filters, onFilterChange, onSearchChange }) 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const response = await apiRequest('/api/dropdowns');
-        // API returns { success: true, data: { category: [...], material: [...], ... } }
-        const data = response.data || response || {};
-        setCategories(['All', ...(data.category || [])]);
-        setMaterials(['All', ...(data.material || [])]);
-        setThemes(['All', ...(data.theme || [])]);
-        setFeatures(data.features || []);
+        // Fetch categories from the categories API (main source of truth)
+        const catResponse = await apiRequest('/api/categories');
+        const categoriesData = catResponse.data || [];
+        if (categoriesData.length > 0) {
+          setCategories(['All', ...categoriesData.map(c => c.name)]);
+        } else {
+          // Fallback to dropdown options
+          const dropResponse = await apiRequest('/api/dropdowns');
+          const dropData = dropResponse.data || dropResponse || {};
+          setCategories(['All', ...(dropData.category || [])]);
+        }
+        
+        // Fetch other filter options from dropdowns
+        const dropResponse = await apiRequest('/api/dropdowns');
+        const dropData = dropResponse.data || dropResponse || {};
+        setMaterials(['All', ...(dropData.material || [])]);
+        setThemes(['All', ...(dropData.theme || [])]);
+        setFeatures(dropData.features || []);
       } catch (error) {
         console.error("Failed to fetch filter options:", error);
         // Fallback to some default values

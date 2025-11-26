@@ -168,12 +168,20 @@ export default function ProductForm({ product, onClose, onSave, user }) {
 
   const fetchDropdowns = useCallback(async () => {
     try {
+      // Fetch categories from the categories API (main source of truth)
+      const catResponse = await apiRequest('/api/categories');
+      const categoriesData = catResponse.data || [];
+      const categoryNames = categoriesData.length > 0 
+        ? categoriesData.map(c => c.name)
+        : [];
+      
+      // Fetch other dropdown options
       const response = await apiRequest('/api/dropdowns');
-      // API returns { success: true, data: { category: [...], subCategory: [...], ... } }
       const data = response.data || response || {};
+      
       setDropdownOptions(prev => ({
         ...prev,
-        category: data.category || [],
+        category: categoryNames.length > 0 ? categoryNames : (data.category || []),
         subCategory: data.subCategory || [],
         priceTier: data.priceTier || ['A', 'B', 'C', 'D'],
         difficulty: data.difficulty || ['Easy', 'Medium', 'Hard'],

@@ -99,7 +99,9 @@ export default function AdminSidebar() {
   return (
     <div className="w-64 bg-slate-800 text-slate-200 flex flex-col h-screen sticky top-0">
       <div className="p-4 border-b border-slate-700 flex items-center gap-2">
-        <img src="/assets/logo-icon.png" alt="PJA3D Icon" className="h-8"/>
+        <div className="w-8 h-8 bg-primary-600 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-lg">P</span>
+        </div>
         <div>
           <h1 className="text-xl font-display font-bold text-white">
             PJA<span className="text-primary-400">3D</span>

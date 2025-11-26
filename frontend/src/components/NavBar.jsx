@@ -33,24 +33,39 @@ export default function NavBar() {
   const [mobileProductsOpen, setMobileProductsOpen] = useState(false);
   const [productCategories, setProductCategories] = useState([]);
   const [isProductsHovered, setIsProductsHovered] = useState(false);
+  const [logoUrl, setLogoUrl] = useState('/assets/logos/logo.png');
   const { toggleCart, getCartCount, getCartSubtotal } = useCart()
   const cartCount = getCartCount()
   const cartSubtotal = getCartSubtotal()
 
   useEffect(() => {
-    const fetchCategories = async () => {
+    const fetchData = async () => {
       try {
-        const response = await apiRequest('/api/dropdowns');
-        // API returns { success: true, data: { category: [...], ... } }
-        const data = response.data || response || {};
-        if (data.category && Array.isArray(data.category)) {
-          setProductCategories(data.category);
+        // Fetch categories from the categories API (main source of truth)
+        const catResponse = await apiRequest('/api/categories');
+        const categories = catResponse.data || [];
+        if (categories.length > 0) {
+          setProductCategories(categories.map(c => c.name));
+        } else {
+          // Fallback to dropdown options if categories collection is empty
+          const dropResponse = await apiRequest('/api/dropdowns');
+          const dropData = dropResponse.data || dropResponse || {};
+          if (dropData.category && Array.isArray(dropData.category)) {
+            setProductCategories(dropData.category);
+          }
+        }
+        
+        // Fetch logo from site settings
+        const settingsResponse = await apiRequest('/api/settings');
+        const settings = settingsResponse.data || settingsResponse || {};
+        if (settings.logos?.main) {
+          setLogoUrl(settings.logos.main);
         }
       } catch (error) {
-        console.error("Failed to fetch product categories", error);
+        console.error("Failed to fetch navigation data", error);
       }
     };
-    fetchCategories();
+    fetchData();
   }, []);
 
   return (
@@ -59,7 +74,13 @@ export default function NavBar() {
         <div className="flex items-center justify-between h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <img src="/assets/logo.png" alt="PJA3D Logo" className="h-10" />
+            <img 
+              src={logoUrl} 
+              alt="PJA3D Logo" 
+              className="h-10" 
+              onError={(e) => { e.target.style.display = 'none'; }}
+            />
+            <span className="font-bold text-xl text-white">PJA3D</span>
           </Link>
 
           {/* Desktop Navigation */}
