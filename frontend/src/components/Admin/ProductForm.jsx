@@ -181,13 +181,15 @@ export default function ProductForm({ product, onClose, onSave, user }) {
       if (imageFile) {
         setUploading(true);
         try {
-          const { data: uploadData } = await apiRequest(
-            '/upload/generate-url',
+          const response = await apiRequest(
+            '/api/upload/generate-url',
             {
               method: 'POST',
               body: JSON.stringify({ fileName: imageFile.name, contentType: imageFile.type })
-            }
+            },
+            token
           );
+          const uploadData = response.data || response;
           
           await fetch(uploadData.uploadUrl, { method: 'PUT', body: imageFile, headers: { 'Content-Type': imageFile.type } });
           imageUrl = uploadData.publicUrl;
