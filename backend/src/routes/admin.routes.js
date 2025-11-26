@@ -16,6 +16,7 @@ router.get('/analytics', adminController.getAnalytics);
 router.post('/products', adminController.createProduct);
 router.put('/products/:id', adminController.updateProduct);
 router.delete('/products/:id', adminController.deleteProduct);
+router.delete('/products/:id/permanent', adminController.permanentDeleteProduct);
 router.post('/products/bulk', adminController.bulkUploadProducts);
 
 // Image upload

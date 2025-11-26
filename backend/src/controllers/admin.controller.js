@@ -295,6 +295,36 @@ exports.deleteProduct = async (req, res, next) => {
 };
 
 /**
+ * Permanently delete product (Admin) - Hard delete from database
+ */
+exports.permanentDeleteProduct = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // Check if product exists
+    const productDoc = await db.collection('products').doc(id).get();
+    if (!productDoc.exists) {
+      return res.status(404).json({
+        success: false,
+        message: 'Product not found'
+      });
+    }
+
+    // Delete the product permanently
+    await db.collection('products').doc(id).delete();
+
+    logger.info(`Product permanently deleted: ${id} by ${req.user.email}`);
+
+    res.json({
+      success: true,
+      message: 'Product permanently deleted'
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
  * Bulk upload products
  */
 exports.bulkUploadProducts = async (req, res, next) => {
