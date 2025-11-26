@@ -145,13 +145,23 @@ exports.createProduct = async (req, res, next) => {
       };
     }
 
+    // Convert imageUrl to imageUrls array for consistency
+    let imageUrls = productData.imageUrls || [];
+    if (productData.imageUrl && !imageUrls.includes(productData.imageUrl)) {
+      imageUrls = [productData.imageUrl, ...imageUrls];
+    }
+
     const product = {
       ...productData,
+      imageUrls,
       isActive: productData.isActive !== undefined ? productData.isActive : true,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: req.user.uid
     };
+
+    // Clean up: remove singular imageUrl field
+    delete product.imageUrl;
 
     // Remove any undefined fields to avoid Firestore errors
     Object.keys(product).forEach(key => product[key] === undefined && delete product[key]);
@@ -178,6 +188,16 @@ exports.updateProduct = async (req, res, next) => {
   try {
     const { id } = req.params;
     const updates = req.body;
+
+    // Convert imageUrl to imageUrls array for consistency
+    if (updates.imageUrl) {
+      let imageUrls = updates.imageUrls || [];
+      if (!imageUrls.includes(updates.imageUrl)) {
+        imageUrls = [updates.imageUrl, ...imageUrls];
+      }
+      updates.imageUrls = imageUrls;
+      delete updates.imageUrl;
+    }
 
     // Remove any undefined fields to avoid Firestore errors
     Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);
