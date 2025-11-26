@@ -37,6 +37,7 @@ export default function ProductForm({ product, onClose, onSave, user }) {
     productionTime: '',
     stockQty: '',
     isActive: true,
+    isFeatured: false,
     imageUrl: '',
     tags: [],
     features: [''],
