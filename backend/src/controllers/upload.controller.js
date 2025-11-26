@@ -43,10 +43,15 @@ exports.uploadProductImage = async (req, res, next) => {
     // Handle success
     stream.on('finish', async () => {
       try {
-        // Make the file publicly accessible
-        await file.makePublic();
+        // Try to make the file publicly accessible
+        // This may fail if bucket-level public access is not enabled
+        try {
+          await file.makePublic();
+        } catch (publicError) {
+          logger.warn('Could not make file public (bucket may not allow), using download URL:', publicError.message);
+        }
 
-        // Firebase Storage public URL format
+        // Firebase Storage public URL format (works with Firebase Storage rules allowing read: if true)
         const encodedPath = encodeURIComponent(filename);
         const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
 
@@ -63,8 +68,8 @@ exports.uploadProductImage = async (req, res, next) => {
           }
         });
       } catch (error) {
-        logger.error('Error making file public:', error);
-        next(new AppError('Failed to make image public', 500, 'PUBLIC_ACCESS_FAILED'));
+        logger.error('Error finalizing upload:', error);
+        next(new AppError('Failed to process uploaded image', 500, 'UPLOAD_FINALIZE_FAILED'));
       }
     });
 
