@@ -43,10 +43,10 @@ export default function ProductsGrid({ products, loading, onProductClick, showCu
           <FileText className="h-10 w-10 text-primary-600" />
         </div>
         <h3 className="font-semibold text-lg text-primary-800 mb-2">
-          Looking for a Custom Design?
+          Can't Find What You Need?
         </h3>
         <p className="text-sm text-primary-700 mb-4">
-          We can create custom 3D prints just for you. Get in touch for a quote!
+          We create custom products tailored to your needs. Share your idea and get a quote!
         </p>
         <a
           href={`https://wa.me/${whatsAppNumber || '916372362313'}`}
