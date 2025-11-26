@@ -15,7 +15,7 @@ export default function ProductManagement() {
     try {
       // To get all products (active and inactive), we can add a query param
       // The backend should be updated to handle this. For now, let's assume it does.
-      const data = await apiRequest('/api/products?includeInactive=true')
+      const data = await apiRequest('/api/products?includeInactive=true&sort=date-desc')
       setProducts(data.data || [])
     } catch (error) {
       console.error('Error fetching products:', error)
