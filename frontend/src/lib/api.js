@@ -28,7 +28,16 @@ export async function apiRequest(endpoint, options = {}, token = null) {
     const data = await response.json()
 
     if (!response.ok) {
-      throw new Error(data.error || data.message || 'API request failed')
+      // Handle different error response formats
+      let errorMessage = 'API request failed';
+      if (typeof data.error === 'string') {
+        errorMessage = data.error;
+      } else if (typeof data.message === 'string') {
+        errorMessage = data.message;
+      } else if (data.error?.message) {
+        errorMessage = data.error.message;
+      }
+      throw new Error(errorMessage)
     }
 
     return data
