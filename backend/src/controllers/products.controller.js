@@ -65,12 +65,14 @@ const getProducts = async (req, res, next) => {
       case 'date-asc':
         query = query.orderBy('createdAt', 'asc');
         break;
-      case 'date-desc':
-        query = query.orderBy('createdAt', 'desc');
-        break;
       case 'featured':
-      default:
+        // Only use isFeatured sort if explicitly requested
         query = query.orderBy('isFeatured', 'desc').orderBy('createdAt', 'desc');
+        break;
+      case 'date-desc':
+      default:
+        // Default to date-desc to ensure all products are returned
+        query = query.orderBy('createdAt', 'desc');
         break;
     }
 
