@@ -62,7 +62,7 @@ export default function CartDrawer() {
                 const itemPrice = item.product.pricing?.discountedPrice || item.product.discountedPrice || item.product.price || item.product.pricing?.basePrice || item.product.actualPrice || 0;
                 return (
                   <div key={item.product.id} className="flex gap-4 items-center">
-                    <img src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} className="w-20 h-20 rounded-lg object-cover" />
+                    <img src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} className="w-20 h-20 rounded-lg object-contain bg-slate-100" />
                     <div className="flex-1">
                       <h3 className="font-semibold">{item.product.name}</h3>
                       <p className="text-sm text-slate-500">₹{Math.round(itemPrice)}</p>

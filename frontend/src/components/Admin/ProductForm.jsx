@@ -535,7 +535,7 @@ export default function ProductForm({ product, onClose, onSave, user }) {
                 <div className="space-y-3">
                     {imagePreview ? (
                       <div className="relative w-full h-48 rounded-lg overflow-hidden bg-slate-100">
-                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                        <img src={imagePreview} alt="Preview" className="w-full h-full object-contain" />
                         <button type="button" onClick={() => { setImageFile(null); setImagePreview(''); setFormData({ ...formData, imageUrl: '' }); }} className="absolute top-2 right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600">
                           <X className="w-4 h-4" />
                         </button>

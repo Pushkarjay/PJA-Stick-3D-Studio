@@ -397,7 +397,7 @@ export default function Checkout() {
                                 <img
                                   src={item.product.imageUrls?.[0] || item.product.imageUrl}
                                   alt={item.product.name}
-                                  className="w-full h-full object-cover"
+                                  className="w-full h-full object-contain"
                                 />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center">

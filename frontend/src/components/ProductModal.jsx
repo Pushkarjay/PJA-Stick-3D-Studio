@@ -37,11 +37,11 @@ const ProductImageGallery = ({ images, productName }) => {
 
   return (
     <div className="relative">
-      <div className="aspect-square w-full overflow-hidden rounded-xl shadow-lg">
+      <div className="aspect-square w-full overflow-hidden rounded-xl shadow-lg bg-slate-100">
         <img
           src={images[currentIndex]}
           alt={`${productName} - image ${currentIndex + 1}`}
-          className="w-full h-full object-cover transition-opacity duration-300"
+          className="w-full h-full object-contain transition-opacity duration-300"
         />
       </div>
       {images.length > 1 && (

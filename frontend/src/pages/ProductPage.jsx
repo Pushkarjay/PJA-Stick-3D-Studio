@@ -111,7 +111,7 @@ export default function ProductPage() {
             {/* Product Image */}
             <div className="aspect-square rounded-xl overflow-hidden bg-slate-100">
               {(product.imageUrls?.[0] || product.imageUrl) ? (
-                <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="w-full h-full object-contain" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center">
                   <ShoppingCart className="w-24 h-24 text-slate-300" />

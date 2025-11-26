@@ -147,7 +147,7 @@ export default function OrderDetailsModal({ order, onClose, onUpdate }) {
                                         <tr key={item.productId} className="border-t">
                                             <td className="p-2 flex items-center gap-3">
                                                 <div className="w-10 h-10 rounded bg-slate-100 overflow-hidden">
-                                                    {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" /> : <Package className="w-full h-full text-slate-300 p-2" />}
+                                                    {item.imageUrl ? <img src={item.imageUrl} alt={item.name} className="w-full h-full object-contain" /> : <Package className="w-full h-full text-slate-300 p-2" />}
                                                 </div>
                                                 <div>
                                                     <div className="font-medium text-sm">{item.name}</div>

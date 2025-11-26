@@ -77,7 +77,7 @@ export default function NavBar() {
             <img 
               src={logoUrl} 
               alt="PJA3D Logo" 
-              className="h-10" 
+              className="h-10 w-auto object-contain" 
               onError={(e) => { e.target.style.display = 'none'; }}
             />
             <span className="font-bold text-xl text-white">PJA3D</span>
