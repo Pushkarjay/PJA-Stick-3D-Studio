@@ -24,11 +24,16 @@ function initializeStorage() {
     });
   }
 
-  // Use Firebase Storage bucket by default (project-id.appspot.com)
-  const bucketName = config.gcs.bucketName || `${config.gcpProjectId}.appspot.com`;
+  // Firebase Storage bucket formats:
+  // - New format: project-id.firebasestorage.app
+  // - Old format: project-id.appspot.com
+  // Use environment variable if set, otherwise use new Firebase Storage format
+  const bucketName = config.gcs.bucketName || 
+    process.env.FIREBASE_STORAGE_BUCKET || 
+    `${config.gcpProjectId}.firebasestorage.app`;
   
-  if (!bucketName || bucketName === '.appspot.com') {
-    throw new Error('Storage bucket name could not be determined. Set GCS_BUCKET_NAME or GCP_PROJECT_ID environment variable');
+  if (!bucketName || bucketName === '.firebasestorage.app') {
+    throw new Error('Storage bucket name could not be determined. Set GCS_BUCKET_NAME, FIREBASE_STORAGE_BUCKET, or GCP_PROJECT_ID environment variable');
   }
 
   logger.info(`Using storage bucket: ${bucketName}`);
@@ -60,8 +65,10 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
       contentType,
     });
 
-    // Public URL for accessing the file (bucket is already public)
-    const publicUrl = `https://storage.googleapis.com/${bucketName}/${uniqueFileName}`;
+    // Public URL - Firebase Storage uses firebasestorage.googleapis.com format
+    // Format: https://firebasestorage.googleapis.com/v0/b/{bucket}/o/{path}?alt=media
+    const encodedPath = encodeURIComponent(uniqueFileName);
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
 
     logger.info(`Generated signed upload URL for: ${uniqueFileName}`);
 
@@ -115,6 +122,7 @@ const deleteFile = async (fileName) => {
 const uploadFile = async (buffer, originalName, destinationPath) => {
   try {
     const bucket = initializeStorage();
+    const bucketName = bucket.name;
     const timestamp = Date.now();
     const uniqueFileName = `${destinationPath}/${timestamp}-${originalName}`;
     const file = bucket.file(uniqueFileName);
@@ -127,12 +135,14 @@ const uploadFile = async (buffer, originalName, destinationPath) => {
       public: true, // Make the file publicly readable
     });
 
-    const publicUrl = `https://storage.googleapis.com/${bucket.name}/${uniqueFileName}`;
-    logger.info(`File uploaded to GCS: ${publicUrl}`);
+    // Firebase Storage public URL format
+    const encodedPath = encodeURIComponent(uniqueFileName);
+    const publicUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
+    logger.info(`File uploaded to Firebase Storage: ${publicUrl}`);
     return publicUrl;
 
   } catch (error) {
-    logger.error('Failed to upload file to GCS:', error);
+    logger.error('Failed to upload file to Firebase Storage:', error);
     throw new Error('Failed to upload file: ' + error.message);
   }
 };
