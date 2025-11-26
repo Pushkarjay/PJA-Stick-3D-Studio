@@ -12,11 +12,13 @@ export default function FiltersBar({ filters, onFilterChange, onSearchChange }) 
   useEffect(() => {
     const fetchFilterOptions = async () => {
       try {
-        const { data } = await apiRequest('/api/dropdowns');
-        setCategories(['All', ...(data.category?.values || [])]);
-        setMaterials(['All', ...(data.material?.values || [])]);
-        setThemes(['All', ...(data.theme?.values || [])]);
-        setFeatures(data.features?.values || []);
+        const response = await apiRequest('/api/dropdowns');
+        // API returns { success: true, data: { category: [...], material: [...], ... } }
+        const data = response.data || response || {};
+        setCategories(['All', ...(data.category || [])]);
+        setMaterials(['All', ...(data.material || [])]);
+        setThemes(['All', ...(data.theme || [])]);
+        setFeatures(data.features || []);
       } catch (error) {
         console.error("Failed to fetch filter options:", error);
         // Fallback to some default values

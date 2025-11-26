@@ -168,13 +168,15 @@ export default function ProductForm({ product, onClose, onSave, user }) {
 
   const fetchDropdowns = useCallback(async () => {
     try {
-      const { data } = await apiRequest('/api/dropdowns');
+      const response = await apiRequest('/api/dropdowns');
+      // API returns { success: true, data: { category: [...], subCategory: [...], ... } }
+      const data = response.data || response || {};
       setDropdownOptions(prev => ({
         ...prev,
-        category: data.category?.values || [],
-        subCategory: data.subCategory?.values || [],
-        priceTier: data.priceTier?.values || ['A', 'B', 'C', 'D'],
-        difficulty: data.difficulty?.values || ['Easy', 'Medium', 'Hard'],
+        category: data.category || [],
+        subCategory: data.subCategory || [],
+        priceTier: data.priceTier || ['A', 'B', 'C', 'D'],
+        difficulty: data.difficulty || ['Easy', 'Medium', 'Hard'],
       }));
     } catch (err) {
       toast.error('Failed to load form options.');

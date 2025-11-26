@@ -163,8 +163,15 @@ export default function DropdownManagement() {
     const fetchDropdowns = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await apiRequest('/api/dropdowns');
-            setDropdowns(data || {});
+            const response = await apiRequest('/api/dropdowns');
+            // API returns { success: true, data: { category: [...], subCategory: [...] } }
+            const data = response.data || response || {};
+            // Transform to the format DropdownCard expects: { fieldName: { values: [...] } }
+            const transformed = {};
+            Object.entries(data).forEach(([key, values]) => {
+                transformed[key] = { values: Array.isArray(values) ? values : [] };
+            });
+            setDropdowns(transformed);
         } catch (error) {
             console.error('Failed to fetch dropdowns:', error);
             toast.error('Failed to load dropdown options.');
