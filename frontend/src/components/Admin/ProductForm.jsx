@@ -217,12 +217,12 @@ export default function ProductForm({ product, onClose, onSave, user }) {
       };
       
       const method = product?.id ? 'PUT' : 'POST';
-      const endpoint = product?.id ? `/products/${product.id}` : '/products';
+      const endpoint = product?.id ? `/api/admin/products/${product.id}` : '/api/admin/products';
 
       await apiRequest(endpoint, {
         method,
         body: JSON.stringify(productData)
-      });
+      }, token);
 
       onSave()
       onClose()

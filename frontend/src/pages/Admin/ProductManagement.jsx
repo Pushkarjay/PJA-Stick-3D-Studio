@@ -31,10 +31,9 @@ export default function ProductManagement() {
     
     try {
       const token = await user.getIdToken()
-      await apiRequest(`/api/products/${productId}`, {
-        method: 'DELETE',
-        headers: { 'Authorization': `Bearer ${token}` }
-      })
+      await apiRequest(`/api/admin/products/${productId}`, {
+        method: 'DELETE'
+      }, token)
       fetchProducts() // Refresh list after delete
     } catch (error) {
       alert('Error deleting product: ' + error.message)
