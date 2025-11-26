@@ -10,6 +10,7 @@ import {
   FileUp,
   CreditCard,
   LogOut,
+  UserPlus,
 } from 'lucide-react'
 import { useAuth } from '../../hooks/useAuth'
 import { useState } from 'react'
@@ -83,6 +84,7 @@ const navLinks = [
   { icon: Settings, text: 'Site Settings', path: '/admin/settings' },
   { icon: FileUp, text: 'Import / Export', path: '/admin/import' },
   { icon: CreditCard, text: 'Billing', path: '/admin/billing' },
+  { icon: UserPlus, text: 'Create Admin', path: '/admin/create-admin' },
 ]
 
 export default function AdminSidebar() {

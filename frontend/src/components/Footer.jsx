@@ -96,10 +96,10 @@ export default function Footer({
             <ul className="space-y-2 text-slate-400 text-sm">
               <li>3D Printing</li>
               <li>Custom Stickers</li>
-              <li>Flip Names</li>
-              <li>Moon Lamps</li>
-              <li>Divine Idols</li>
               <li>Professional Printing</li>
+              <li>Polaroid Photos</li>
+              <li>Custom Designs</li>
+              <li>Bulk Orders</li>
             </ul>
           </div>
 

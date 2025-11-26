@@ -31,7 +31,7 @@ export default function Hero({ badge, headline, subtext, description, whatsAppNu
 
           {/* Subtext */}
           <p className="text-xl md:text-2xl text-slate-300 mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            {subtext || 'Flip Names, Moon Lamps & Divine Idols'}
+            {subtext || '3D Printing • Custom Stickers • Professional Printing'}
           </p>
 
           <p className="text-lg text-slate-400 mb-10 max-w-2xl mx-auto animate-slide-up" style={{ animationDelay: '0.2s' }}>

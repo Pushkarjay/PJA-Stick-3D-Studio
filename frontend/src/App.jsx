@@ -16,6 +16,7 @@ import AdminLogin from './pages/Admin/AdminLogin'
 import DropdownManagementPage from './pages/Admin/DropdownManagement';
 import ReviewManagementPage from './pages/Admin/ReviewManagementPage';
 import ContentManagementLayout from './pages/Admin/ContentManagementLayout';
+import CreateAdminPage from './pages/Admin/CreateAdminPage';
 import Checkout from './pages/Checkout'
 import About from './pages/About'
 import Contact from './pages/Contact'
@@ -70,6 +71,7 @@ function App() {
               <Route path="settings" element={<SiteSettings />} />
               <Route path="import" element={<ImportPage />} />
               <Route path="billing" element={<BillingPage />} />
+              <Route path="create-admin" element={<CreateAdminPage />} />
             </Route>
           </Routes>
         </Router>
