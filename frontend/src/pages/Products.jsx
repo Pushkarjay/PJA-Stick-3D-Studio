@@ -82,6 +82,7 @@ export default function Products() {
           products={products}
           loading={loading}
           onProductClick={handleProductClick}
+          showCustomCta={filters.category !== 'All'}
         />
       </main>
 

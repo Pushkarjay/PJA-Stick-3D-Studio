@@ -1,17 +1,16 @@
 import { Link } from 'react-router-dom'
-import { MapPin, Phone, Mail, Facebook, Instagram, MessageCircle } from 'lucide-react'
+import { MapPin, Phone, Mail, Instagram, MessageCircle } from 'lucide-react'
 
 export default function Footer({
   description = 'Custom 3D printing, premium stickers, and professional printing services at Suresh Singh Chowk.',
   socialLinks = {
-    facebook: 'https://facebook.com',
     instagram: 'https://instagram.com',
     whatsapp: 'https://wa.me/916372362313',
   },
   contact = {
     address: 'Suresh Singh Chowk, [Your City]',
     phone: '+91 6372362313',
-    email: 'info@pja3dstudio.com',
+    email: '',
   },
 }) {
   const currentYear = new Date().getFullYear()
@@ -29,33 +28,28 @@ export default function Footer({
               {description}
             </p>
             <div className="flex gap-3">
-              <a
-                href={socialLinks?.facebook}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="Facebook"
-              >
-                <Facebook className="w-5 h-5" />
-              </a>
-              <a
-                href={socialLinks?.instagram}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="Instagram"
-              >
-                <Instagram className="w-5 h-5" />
-              </a>
-              <a
-                href={socialLinks?.whatsapp}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
-                aria-label="WhatsApp"
-              >
-                <MessageCircle className="w-5 h-5" />
-              </a>
+              {socialLinks?.instagram && (
+                <a
+                  href={socialLinks.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
+                  aria-label="Instagram"
+                >
+                  <Instagram className="w-5 h-5" />
+                </a>
+              )}
+              {socialLinks?.whatsapp && (
+                <a
+                  href={socialLinks.whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="p-2 bg-slate-800 hover:bg-primary-600 rounded-lg transition-colors"
+                  aria-label="WhatsApp"
+                >
+                  <MessageCircle className="w-5 h-5" />
+                </a>
+              )}
             </div>
             <div className="pt-4">
               <h4 className="text-xs font-semibold tracking-wider text-slate-500 uppercase">A legacy of:</h4>
@@ -117,12 +111,14 @@ export default function Footer({
                   {contact?.phone}
                 </a>
               </li>
-              <li className="flex items-center gap-2">
-                <Mail className="w-5 h-5 flex-shrink-0" />
-                <a href={`mailto:${contact?.email}`} className="hover:text-primary-600 transition-colors">
-                  {contact?.email}
-                </a>
-              </li>
+              {contact?.email && (
+                <li className="flex items-center gap-2">
+                  <Mail className="w-5 h-5 flex-shrink-0" />
+                  <a href={`mailto:${contact.email}`} className="hover:text-primary-600 transition-colors">
+                    {contact.email}
+                  </a>
+                </li>
+              )}
             </ul>
           </div>
         </div>

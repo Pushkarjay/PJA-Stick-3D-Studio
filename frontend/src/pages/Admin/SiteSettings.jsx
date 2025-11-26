@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { apiRequest } from '../../lib/api';
 import { useAuth } from '../../hooks/useAuth';
 import toast from 'react-hot-toast';
-import { Save, Loader, Image as ImageIcon, Info } from 'lucide-react';
+import { Save, Loader, Image as ImageIcon, Info, Upload } from 'lucide-react';
 
 const Section = ({ title, description, children }) => (
   <div className="bg-white p-6 rounded-lg shadow-sm border border-slate-200">
@@ -42,11 +42,37 @@ const TextArea = ({ label, name, value, onChange, placeholder, rows = 3 }) => (
     </div>
   );
 
+const ImageUploadField = ({ label, name, imageUrl, onUpload, uploading }) => (
+  <div>
+    <label className="block text-sm font-medium text-slate-700 mb-1">{label}</label>
+    <div className="mt-1 flex items-center gap-4">
+      <div className="w-24 h-24 rounded-lg overflow-hidden bg-slate-100 flex items-center justify-center border">
+        {imageUrl ? (
+          <img src={imageUrl} alt={label} className="w-full h-full object-contain" />
+        ) : (
+          <ImageIcon className="w-8 h-8 text-slate-400" />
+        )}
+      </div>
+      <div className="flex-1">
+        <input
+          type="file"
+          accept="image/*"
+          onChange={(e) => onUpload(e, name)}
+          disabled={uploading}
+          className="block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-primary-50 file:text-primary-700 hover:file:bg-primary-100 disabled:opacity-50"
+        />
+        {uploading && <p className="text-xs text-slate-500 mt-1">Uploading...</p>}
+      </div>
+    </div>
+  </div>
+);
+
 export default function SiteSettings() {
   const { user } = useAuth();
   const [settings, setSettings] = useState({});
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
 
   const fetchSettings = useCallback(async () => {
     if (!user) return;
@@ -84,6 +110,56 @@ export default function SiteSettings() {
       });
     } else {
       setSettings(prev => ({ ...prev, [name]: value }));
+    }
+  };
+
+  const handleImageUpload = async (e, fieldName) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    
+    setUploading(true);
+    try {
+      const token = await user.getIdToken();
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:8080'}/api/upload/product`,
+        {
+          method: 'POST',
+          headers: { 'Authorization': `Bearer ${token}` },
+          body: formData
+        }
+      );
+      
+      if (!response.ok) throw new Error('Upload failed');
+      
+      const result = await response.json();
+      const imageUrl = result.data?.imageUrl || result.data?.url;
+      
+      // Update the settings with the new image URL
+      const keys = fieldName.split('.');
+      if (keys.length > 1) {
+        setSettings(prev => {
+          const newSettings = { ...prev };
+          let current = newSettings;
+          for (let i = 0; i < keys.length - 1; i++) {
+            current[keys[i]] = current[keys[i]] || {};
+            current = current[keys[i]];
+          }
+          current[keys[keys.length - 1]] = imageUrl;
+          return newSettings;
+        });
+      } else {
+        setSettings(prev => ({ ...prev, [fieldName]: imageUrl }));
+      }
+      
+      toast.success('Image uploaded successfully!');
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast.error('Failed to upload image');
+    } finally {
+      setUploading(false);
     }
   };
 
@@ -125,6 +201,29 @@ export default function SiteSettings() {
         </div>
 
         <div className="space-y-6">
+          <Section title="Branding & Logos" description="Upload your brand logos. These will be displayed across the site.">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <ImageUploadField 
+                label="Main Logo (PJA3D)" 
+                name="logos.main" 
+                imageUrl={settings.logos?.main} 
+                onUpload={handleImageUpload}
+                uploading={uploading}
+              />
+              <ImageUploadField 
+                label="Legacy Logo (Kit Print)" 
+                name="logos.kitPrint" 
+                imageUrl={settings.logos?.kitPrint} 
+                onUpload={handleImageUpload}
+                uploading={uploading}
+              />
+            </div>
+            <div className="mt-3 flex items-center gap-2 text-sm text-slate-600 bg-amber-50 p-2 rounded-md">
+              <Info className="w-4 h-4 text-amber-500" />
+              <span>After uploading, save changes and the logos will appear on the site. Use PNG format with transparent background for best results.</span>
+            </div>
+          </Section>
+
           <Section title="Homepage Banner" description="Content for the main banner on the homepage.">
             <Input label="Main Headline" name="banner.title" value={settings.banner?.title} onChange={handleInputChange} placeholder="e.g., Print Stick Create" />
             <TextArea label="Sub-headline" name="banner.subtitle" value={settings.banner?.subtitle} onChange={handleInputChange} placeholder="Your one-stop shop for custom prints." />
