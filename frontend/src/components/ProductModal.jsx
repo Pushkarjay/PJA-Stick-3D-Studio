@@ -74,8 +74,8 @@ const CustomerReviews = ({ productId }) => {
     const fetchReviews = useCallback(async () => {
         setLoading(true);
         try {
-            const { data } = await apiRequest(`/reviews/${productId}`);
-            let sortedReviews = data.reviews || [];
+            const response = await apiRequest(`/api/reviews/${productId}`);
+            let sortedReviews = response.data?.reviews || response.data || [];
             if (sort === 'Highest Rating') {
                 sortedReviews.sort((a, b) => b.rating - a.rating);
             } else if (sort === 'Lowest Rating') {

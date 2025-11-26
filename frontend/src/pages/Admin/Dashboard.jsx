@@ -70,12 +70,10 @@ export default function Dashboard() {
       setLoading(true);
       try {
         const token = await user.getIdToken();
-        const data = await apiRequest('/api/admin/dashboard', {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-        if (data.success) {
-          setDashboardData(data.data);
-        }
+        const response = await apiRequest('/api/admin/dashboard', {}, token);
+        // Handle wrapped response { success: true, data: {...} }
+        const dashData = response.data || response;
+        setDashboardData(dashData);
       } catch (error) {
         console.error("Failed to fetch dashboard data:", error);
       } finally {

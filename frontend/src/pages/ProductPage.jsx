@@ -52,8 +52,10 @@ export default function ProductPage() {
   const fetchProduct = async () => {
     setLoading(true)
     try {
-      const data = await getProducts({ isActive: true })
-      const found = (data.products || []).find(p => p.id === id)
+      const response = await getProducts({ isActive: true })
+      // API returns { success: true, data: [...] }
+      const products = response.data || response.products || [];
+      const found = products.find(p => p.id === id)
       setProduct(found)
     } catch (error) {
       setProduct(null)

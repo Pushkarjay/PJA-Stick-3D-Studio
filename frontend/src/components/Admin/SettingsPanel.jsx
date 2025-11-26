@@ -92,7 +92,8 @@ export default function SettingsPanel({ user }) {
 
   const fetchSettings = async () => {
     try {
-      const data = await apiRequest('/api/settings')
+      const response = await apiRequest('/api/settings')
+      const data = response.data || response;
       if (data) {
         // Ensure all nested objects exist to prevent errors
         setSettings({
@@ -138,11 +139,12 @@ export default function SettingsPanel({ user }) {
       formData.append('fieldname', fieldName)
 
       const token = await user.getIdToken()
-      const data = await apiRequest('/api/settings/upload-image', {
+      const response = await apiRequest('/api/settings/upload-image', {
         method: 'POST',
         headers: { 'Authorization': `Bearer ${token}` },
         body: formData
       })
+      const data = response.data || response;
 
       if (data.imageUrl) {
         setSettings(prev => ({ ...prev, [`${fieldName}Url`]: data.imageUrl }))

@@ -30,8 +30,8 @@ export default function Checkout() {
   useEffect(() => {
     const fetchSiteSettings = async () => {
       try {
-        const settings = await apiRequest('/api/settings');
-        setSiteSettings(settings);
+        const response = await apiRequest('/api/settings');
+        setSiteSettings(response.data || response);
       } catch (error) {
         console.error('Error fetching site settings:', error);
       }
