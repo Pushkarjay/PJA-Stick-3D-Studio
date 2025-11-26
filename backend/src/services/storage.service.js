@@ -24,11 +24,15 @@ function initializeStorage() {
     });
   }
 
-  if (!config.gcs.bucketName) {
-    throw new Error('GCS_BUCKET_NAME environment variable is not set');
+  // Use Firebase Storage bucket by default (project-id.appspot.com)
+  const bucketName = config.gcs.bucketName || `${config.gcpProjectId}.appspot.com`;
+  
+  if (!bucketName || bucketName === '.appspot.com') {
+    throw new Error('Storage bucket name could not be determined. Set GCS_BUCKET_NAME or GCP_PROJECT_ID environment variable');
   }
 
-  bucket = storage.bucket(config.gcs.bucketName);
+  logger.info(`Using storage bucket: ${bucketName}`);
+  bucket = storage.bucket(bucketName);
   return bucket;
 }
 
@@ -41,6 +45,7 @@ function initializeStorage() {
 const generateSignedUploadUrl = async (fileName, contentType) => {
   try {
     const bucket = initializeStorage();
+    const bucketName = bucket.name;
     
     // Generate unique filename with timestamp
     const timestamp = Date.now();
@@ -56,7 +61,7 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
     });
 
     // Public URL for accessing the file (bucket is already public)
-    const publicUrl = `https://storage.googleapis.com/${config.gcs.bucketName}/${uniqueFileName}`;
+    const publicUrl = `https://storage.googleapis.com/${bucketName}/${uniqueFileName}`;
 
     logger.info(`Generated signed upload URL for: ${uniqueFileName}`);
 
@@ -80,12 +85,13 @@ const generateSignedUploadUrl = async (fileName, contentType) => {
 const deleteFile = async (fileName) => {
   try {
     const bucket = initializeStorage();
+    const bucketName = bucket.name;
     
     // Extract filename from URL if full URL is provided
     let fileToDelete = fileName;
     if (fileName.includes('storage.googleapis.com')) {
       const urlParts = fileName.split('/');
-      fileToDelete = urlParts.slice(urlParts.indexOf(config.gcs.bucketName) + 1).join('/');
+      fileToDelete = urlParts.slice(urlParts.indexOf(bucketName) + 1).join('/');
     }
 
     await bucket.file(fileToDelete).delete();
