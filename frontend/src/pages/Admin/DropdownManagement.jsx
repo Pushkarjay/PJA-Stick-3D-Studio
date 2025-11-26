@@ -167,9 +167,12 @@ export default function DropdownManagement() {
             // API returns { success: true, data: { category: [...], subCategory: [...] } }
             const data = response.data || response || {};
             // Transform to the format DropdownCard expects: { fieldName: { values: [...] } }
+            // Exclude 'category' since it's managed in Category Management
             const transformed = {};
             Object.entries(data).forEach(([key, values]) => {
-                transformed[key] = { values: Array.isArray(values) ? values : [] };
+                if (key !== 'category') { // Skip category - managed separately
+                    transformed[key] = { values: Array.isArray(values) ? values : [] };
+                }
             });
             setDropdowns(transformed);
         } catch (error) {
@@ -186,7 +189,13 @@ export default function DropdownManagement() {
 
     return (
         <div className="space-y-8">
-            <h1 className="text-3xl font-bold text-slate-900">Dropdown Management</h1>
+            <div>
+                <h1 className="text-3xl font-bold text-slate-900">Dropdown Management</h1>
+                <p className="text-sm text-slate-500 mt-1">
+                    Manage dropdown options like sub-categories, price tiers, and other product attributes. 
+                    <span className="font-medium"> Categories are managed separately in Category Management.</span>
+                </p>
+            </div>
             
             <CreateDropdownForm fetchDropdowns={fetchDropdowns} />
 

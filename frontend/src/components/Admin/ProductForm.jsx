@@ -196,25 +196,42 @@ export default function ProductForm({ product, onClose, onSave, user }) {
   const handleCreateNewOption = async (fieldName, newValue) => {
     try {
       const token = await user.getIdToken();
-      await apiRequest('/api/dropdowns', {
-        method: 'POST',
-        body: JSON.stringify({ fieldName, value: newValue })
-      }, token);
+      
+      if (fieldName === 'category') {
+        // For categories, create in the categories collection (main source of truth)
+        const slug = newValue.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
+        await apiRequest('/api/categories', {
+          method: 'POST',
+          body: JSON.stringify({ 
+            name: newValue, 
+            slug: slug,
+            description: '',
+            isActive: true
+          })
+        }, token);
+        toast.success(`Category "${newValue}" created successfully`);
+      } else {
+        // For other dropdowns (subCategory, priceTier, etc.), use dropdownOptions
+        await apiRequest('/api/dropdowns', {
+          method: 'POST',
+          body: JSON.stringify({ fieldName, value: newValue })
+        }, token);
+        toast.success(`Added "${newValue}" to ${fieldName}`);
+      }
       
       // Update local state
       setDropdownOptions(prev => ({
         ...prev,
         [fieldName]: [...(prev[fieldName] || []), newValue]
       }));
-      
-      toast.success(`Added "${newValue}" to ${fieldName}`);
     } catch (err) {
-      console.error('Error creating dropdown option:', err);
-      // Still update local state even if API fails
+      console.error('Error creating option:', err);
+      // Still update local state even if API fails (for immediate UI feedback)
       setDropdownOptions(prev => ({
         ...prev,
         [fieldName]: [...(prev[fieldName] || []), newValue]
       }));
+      toast.error(`Failed to save "${newValue}" - please add it via Category Management`);
     }
   };
 
