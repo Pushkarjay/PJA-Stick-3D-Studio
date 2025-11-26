@@ -15,7 +15,7 @@ const getProducts = async (req, res, next) => {
       material,
       theme,
       features,
-      sort = 'featured' 
+      sort = 'date-desc' 
     } = req.query;
 
     let query = db.collection('products');
