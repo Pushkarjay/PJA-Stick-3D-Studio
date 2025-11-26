@@ -100,7 +100,10 @@ export function CartProvider({ children }) {
    * Get cart subtotal
    */
   const getCartSubtotal = () => {
-    return cartItems.reduce((total, item) => total + item.product.price * item.quantity, 0);
+    return cartItems.reduce((total, item) => {
+      const price = item.product.price || item.product.pricing?.discountedPrice || item.product.pricing?.basePrice || 0;
+      return total + price * item.quantity;
+    }, 0);
   };
 
   /**

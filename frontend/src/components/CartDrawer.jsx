@@ -59,10 +59,10 @@ export default function CartDrawer() {
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
               {cartItems.map((item) => (
                 <div key={item.product.id} className="flex gap-4 items-center">
-                  <img src={item.product.images?.[0]} alt={item.product.name} className="w-20 h-20 rounded-lg object-cover" />
+                  <img src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} className="w-20 h-20 rounded-lg object-cover" />
                   <div className="flex-1">
                     <h3 className="font-semibold">{item.product.name}</h3>
-                    <p className="text-sm text-slate-500">₹{item.product.pricing?.discountedPrice || item.product.pricing?.basePrice}</p>
+                    <p className="text-sm text-slate-500">₹{item.product.price || item.product.pricing?.discountedPrice || item.product.pricing?.basePrice || 0}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="btn btn-xs btn-outline">-</button>
