@@ -25,6 +25,7 @@ const usersRoutes = require('./routes/users.routes');
 const importRoutes = require('./routes/import.routes');
 const uploadRoutes = require('./routes/upload.routes');
 const dropdownRoutes = require('./routes/dropdown.routes');
+const billingRoutes = require('./routes/billing.routes');
 
 // Initialize Firebase
 require('./services/firebase.service');
@@ -114,6 +115,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/import', importRoutes);
 app.use('/api/upload', uploadRoutes);
 app.use('/api/dropdowns', dropdownRoutes);
+app.use('/api/billing', billingRoutes);
 
 // 404 handler
 app.use((req, res) => {

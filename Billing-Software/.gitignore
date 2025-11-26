@@ -1,0 +1,163 @@
+# KIIT-PRINT Billing - Git Ignore File
+
+# ============================================
+# Backup Files (Don't commit backups to Git)
+# ============================================
+Backup/*.xlsx
+Backup/*.xls
+KIIT-PRINT-Backup-*.xlsx
+records-backup-*.xlsx
+
+# But keep the Backup folder structure
+!Backup/.gitkeep
+
+# ============================================
+# Excel Files (Keep template, ignore generated)
+# ============================================
+# Keep the original template
+!records.xlsx
+
+# Ignore any exported files in root
+*-export-*.xlsx
+*-backup-*.xlsx
+
+# ============================================
+# OS Generated Files
+# ============================================
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
+
+# Linux
+*~
+.directory
+.Trash-*
+
+# ============================================
+# IDE & Editor Files
+# ============================================
+# Visual Studio Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+.history/
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.ipr
+*.iws
+out/
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim
+[._]*.s[a-v][a-z]
+[._]*.sw[a-p]
+[._]s[a-rt-v][a-z]
+[._]ss[a-gi-z]
+[._]sw[a-p]
+Session.vim
+Sessionx.vim
+.netrwhist
+
+# Emacs
+*~
+\#*\#
+/.emacs.desktop
+/.emacs.desktop.lock
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# ============================================
+# Temporary Files
+# ============================================
+*.tmp
+*.temp
+*.bak
+*.swp
+*.swo
+*~.nib
+*.log
+*.cache
+
+# ============================================
+# Node Modules (if ever used)
+# ============================================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+package-lock.json
+yarn.lock
+
+# ============================================
+# Build & Distribution Files
+# ============================================
+dist/
+build/
+*.min.js
+*.min.css
+
+# ============================================
+# Environment & Config Files
+# ============================================
+.env
+.env.local
+.env.*.local
+config.local.js
+
+# ============================================
+# Test Coverage
+# ============================================
+coverage/
+*.lcov
+.nyc_output
+
+# ============================================
+# Misc
+# ============================================
+# Ignore all .xlsx files in root except template
+/*.xlsx
+!records.xlsx
+
+# Keep important documentation
+!README.md
+!BACKUP-SETUP-GUIDE.md
+!LICENSE
+
+# Ignore customer data exports
+customer-*.xlsx
+sales-*.xlsx
+expense-*.xlsx

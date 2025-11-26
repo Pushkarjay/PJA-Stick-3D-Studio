@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KIIT-PRINT</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <header>
+        <div class="container">
+            
+            <nav>
+                <button>KIIT-PRINT</button>
+                <button id="billing-tab-btn" class="active">Billing / Invoice</button>
+                <button id="expense-tab-btn">Expense Tracker</button>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Billing / Invoice Generator Page -->
+        <section id="billing-page">
+            <h2>Billing / Invoice Generator</h2>
+            <div class="billing-layout-new">
+                <!-- Left Sidebar - Customer Info -->
+                <div class="billing-sidebar">
+                    <div class="customer-info-card">
+                        <h3>Customer Information</h3>
+                        <div class="customer-name">
+                            <label for="customer-name">Customer Name:</label>
+                            <input type="text" id="customer-name" placeholder="Optional">
+                        </div>
+                        <div class="bill-datetime">
+                            <div class="datetime-field">
+                                <label for="bill-date">Bill Date:</label>
+                                <input type="date" id="bill-date">
+                            </div>
+                            <div class="datetime-field">
+                                <label for="bill-time">Bill Time:</label>
+                                <input type="time" id="bill-time">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Right Main Area - Billing Table -->
+                <div class="billing-main">
+                    <div class="billing-table-wrapper">
+                        <table id="billing-table">
+                            <thead>
+                                <tr>
+                                    <th>S.No</th>
+                                    <th>Product</th>
+                                    <th>Actual Price (₹)</th>
+                                    <th>Discount (₹)</th>
+                                    <th>Base Discount (%)</th>
+                                    <th>Extra Discount (%)</th>
+                                    <th>Quantity</th>
+                                    <th>Discounted Price (₹)</th>
+                                    <th>Final (₹)</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Rows will be dynamically inserted here by script.js -->
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <td colspan="9" style="text-align: right;"><strong>Total:</strong></td>
+                                    <td id="billing-total">₹0.00</td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                    <div class="billing-actions">
+                        <button id="add-row-btn" class="secondary-btn">+ Add Row</button>
+                        <button id="generate-bill-btn">Generate Bill</button>
+                        <button id="copy-bill-btn">Copy Bill Text</button>
+                        <button id="save-to-expenses-btn">Save to Expenses</button>
+                        <button id="faq-btn">❓ FAQ</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- FAQ Modal -->
+        <div id="faq-modal" class="modal">
+            <div class="modal-content">
+                <span class="modal-close">&times;</span>
+                <h2>KIIT-PRINT Billing / Invoice Expense Tracker FAQ</h2>
+                
+                <div class="faq-section">
+                    <h3>How to Use:</h3>
+                    <ol>
+                        <li>Enter customer name (optional).</li>
+                        <li>Adjust prices, discounts, and quantities in the table.</li>
+                        <li>Click "Generate Bill" to open a printable version in a new tab.</li>
+                        <li>Click "Copy Bill Text" to copy the bill details to your clipboard.</li>
+                        <li>Click "Save to Expenses" to log the bill total in the Expense Tracker.</li>
+                    </ol>
+                </div>
+
+                <div class="faq-section">
+                    <h3>How to Reset:</h3>
+                    <p>To reset all data (including expenses and local storage), clear your browser's cache for this site or click the "Reset All Data" button in the Expense Tracker.</p>
+                </div>
+
+                <div class="faq-section developer-contact">
+                    <h3>Developer Contact:</h3>
+                    <p><strong>Name:</strong> Pushkarjay Ajay</p>
+                    <p><strong>Email:</strong> <a href="mailto:pushkarjay.ajay1@gmail.com">pushkarjay.ajay1@gmail.com</a></p>
+                    <p><strong>Phone:</strong> <a href="tel:+918210164935">+91 8210164935</a></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expense Tracker Page -->
+        <section id="expense-page" class="hidden">
+            <h2>Expense Tracker</h2>
+            <div class="expense-layout-new">
+                <!-- Left Sidebar -->
+                <div class="expense-sidebar">
+                    <div class="expense-dashboard">
+                        <h3>Summary</h3>
+                        <div class="summary-item">
+                            <span>Total Earned:</span>
+                            <span id="total-earned">₹0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Total Invested:</span>
+                            <span id="total-invested">₹0.00</span>
+                        </div>
+                        <div class="summary-item">
+                            <span>Total Due:</span>
+                            <span id="total-due">₹0.00</span>
+                        </div>
+                        <div class="summary-item net-profit">
+                            <span>Net Profit/Loss:</span>
+                            <span id="net-profit">₹0.00</span>
+                            <span id="net-profit-percent">(0.00%)</span>
+                        </div>
+                        <div class="backup-status" id="backup-status">
+                            <div class="backup-info">
+                                <span id="unsaved-indicator" class="hidden">⚠️ Unsaved changes</span>
+                                <span id="last-save-time">Never saved</span>
+                            </div>
+                            <label class="auto-backup-toggle">
+                                <input type="checkbox" id="auto-backup-checkbox">
+                                Auto-backup on changes
+                            </label>
+                        </div>
+                        <button id="quick-save-btn">💾 Quick Save Backup</button>
+                        <button id="export-excel-btn">📊 Export to Excel</button>
+                        <button id="reset-data-btn">Reset All Data</button>
+                        
+                        <!-- Paper Stock Inventory -->
+                        <h3 style="margin-top: 20px;">Paper Stock</h3>
+                        <div class="stock-table-container">
+                            <table id="stock-table">
+                                <thead>
+                                    <tr>
+                                        <th>Type</th>
+                                        <th>Inv. (₹)</th>
+                                        <th>Earn (₹)</th>
+                                        <th>Bought</th>
+                                        <th>Sold</th>
+                                        <th>Stock</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="stock-table-body">
+                                    <!-- Rows will be dynamically inserted here -->
+                                </tbody>
+                            </table>
+                        </div>
+                        <button id="add-stock-row-btn" class="secondary-btn" style="margin-top: 10px;">+ Add Stock Type</button>
+                    </div>
+                </div>
+
+                <!-- Center Content -->
+                <div class="expense-center">
+                    <h3>Add New Entry</h3>
+                    <form id="expense-form">
+                        <div class="expense-datetime">
+                            <input type="date" id="expense-date" required>
+                            <input type="time" id="expense-time" required>
+                        </div>
+                        <input type="text" id="expense-desc" placeholder="Description" required>
+                        <select id="expense-category" required>
+                            <option value="Sale">Sale</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                        <input type="number" id="expense-amount" placeholder="Amount" required min="0" step="0.01">
+                        <select id="expense-type" required>
+                            <option value="Paid">Paid</option>
+                            <option value="Earned">Earned</option>
+                            <option value="Due">Due</option>
+                        </select>
+                        <button type="submit">Add Entry</button>
+                    </form>
+                    
+                    <h3>Entries</h3>
+                    <div class="filters">
+                        <input type="text" id="search-expenses" placeholder="Search by description...">
+                        <select id="filter-category">
+                            <option value="">All Categories</option>
+                            <option value="Sale">Sale</option>
+                            <option value="Investment">Investment</option>
+                            <option value="Expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="expense-table-container">
+                        <table id="expense-table" class="resizable-table">
+                            <thead>
+                                <tr>
+                                    <th class="sortable resizable" data-column="date">Date & Time <span class="sort-icon">↕</span><span class="resize-handle"></span></th>
+                                    <th class="sortable resizable" data-column="description">Description <span class="sort-icon">↕</span><span class="resize-handle"></span></th>
+                                    <th class="sortable resizable" data-column="category">Category <span class="sort-icon">↕</span><span class="resize-handle"></span></th>
+                                    <th class="sortable resizable" data-column="amount">Amount (₹) <span class="sort-icon">↕</span><span class="resize-handle"></span></th>
+                                    <th class="sortable resizable" data-column="type">Type <span class="sort-icon">↕</span><span class="resize-handle"></span></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Expense rows will be dynamically inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Right Sidebar -->
+                <div class="expense-right">
+                    <h3>Daily Sales Summary</h3>
+                    
+                    <!-- Add Daily Entry Form -->
+                    <div class="daily-entry-form">
+                        <h4>Add Past Daily Entry</h4>
+                        <form id="daily-entry-form">
+                            <input type="date" id="daily-entry-date" required placeholder="Date">
+                            <input type="number" id="daily-entry-papers" required placeholder="Paper Count" min="0">
+                            <input type="number" id="daily-entry-amount" required placeholder="Amount (₹)" min="0" step="0.01">
+                            <button type="submit">Add Entry</button>
+                        </form>
+                    </div>
+                    
+                    <div class="daily-summary-container">
+                        <table id="daily-summary-table" class="resizable-table">
+                            <thead>
+                                <tr>
+                                    <th class="resizable">Date<span class="resize-handle"></span></th>
+                                    <th class="resizable">Paper Count<span class="resize-handle"></span></th>
+                                    <th class="resizable">Amount Earned (₹)<span class="resize-handle"></span></th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="daily-summary-body">
+                                <!-- Daily summary rows will be dynamically inserted here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Thank you for contacting KIIT-PRINT!</p>
+            <p>Contact: 6372362313 | UPI: pushkarjay2@ybl</p>
+        </div>
+    </footer>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>
