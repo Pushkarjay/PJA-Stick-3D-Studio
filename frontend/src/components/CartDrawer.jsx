@@ -57,23 +57,27 @@ export default function CartDrawer() {
         ) : (
           <>
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {cartItems.map((item) => (
-                <div key={item.product.id} className="flex gap-4 items-center">
-                  <img src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} className="w-20 h-20 rounded-lg object-cover" />
-                  <div className="flex-1">
-                    <h3 className="font-semibold">{item.product.name}</h3>
-                    <p className="text-sm text-slate-500">₹{item.product.price || item.product.pricing?.discountedPrice || item.product.pricing?.basePrice || 0}</p>
+              {cartItems.map((item) => {
+                // Get the best price available (prefer discounted)
+                const itemPrice = item.product.pricing?.discountedPrice || item.product.discountedPrice || item.product.price || item.product.pricing?.basePrice || item.product.actualPrice || 0;
+                return (
+                  <div key={item.product.id} className="flex gap-4 items-center">
+                    <img src={item.product.imageUrls?.[0] || item.product.imageUrl} alt={item.product.name} className="w-20 h-20 rounded-lg object-cover" />
+                    <div className="flex-1">
+                      <h3 className="font-semibold">{item.product.name}</h3>
+                      <p className="text-sm text-slate-500">₹{Math.round(itemPrice)}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="btn btn-xs btn-outline">-</button>
+                      <span>{item.quantity}</span>
+                      <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="btn btn-xs btn-outline">+</button>
+                    </div>
+                    <button onClick={() => removeFromCart(item.product.id)} className="text-red-500 hover:text-red-700">
+                      <Trash2 size={20} />
+                    </button>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity - 1)} className="btn btn-xs btn-outline">-</button>
-                    <span>{item.quantity}</span>
-                    <button onClick={() => updateQuantity(item.product.id, item.quantity + 1)} className="btn btn-xs btn-outline">+</button>
-                  </div>
-                  <button onClick={() => removeFromCart(item.product.id)} className="text-red-500 hover:text-red-700">
-                    <Trash2 size={20} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             <div className="p-4 border-t space-y-2">

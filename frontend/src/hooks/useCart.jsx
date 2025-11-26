@@ -101,7 +101,8 @@ export function CartProvider({ children }) {
    */
   const getCartSubtotal = () => {
     return cartItems.reduce((total, item) => {
-      const price = item.product.price || item.product.pricing?.discountedPrice || item.product.pricing?.basePrice || 0;
+      // Prefer discounted price, fall back to regular price
+      const price = item.product.pricing?.discountedPrice || item.product.discountedPrice || item.product.price || item.product.pricing?.basePrice || item.product.actualPrice || 0;
       return total + price * item.quantity;
     }, 0);
   };

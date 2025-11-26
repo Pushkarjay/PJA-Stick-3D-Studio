@@ -124,14 +124,35 @@ export default function ProductPage() {
               <div className="text-slate-600 mb-2">{product.category}</div>
               <div className="text-lg text-slate-700 mb-4">{product.description}</div>
               <div className="flex items-center gap-4 mb-4">
-                <span className="text-2xl font-bold text-primary-600">{product.priceTier}</span>
+                {/* Price display - support both flat fields and nested pricing */}
+                {(() => {
+                  const basePrice = product.pricing?.basePrice || product.actualPrice || product.price;
+                  const discountedPrice = product.pricing?.discountedPrice || product.discountedPrice;
+                  const hasDiscount = discountedPrice && basePrice && discountedPrice < basePrice;
+                  
+                  if (hasDiscount) {
+                    return (
+                      <div className="flex items-baseline gap-3">
+                        <span className="text-3xl font-bold text-primary-600">₹{Math.round(discountedPrice)}</span>
+                        <span className="text-xl font-medium text-slate-400 line-through">₹{Math.round(basePrice)}</span>
+                        <span className="badge badge-accent">
+                          {Math.round(((basePrice - discountedPrice) / basePrice) * 100)}% OFF
+                        </span>
+                      </div>
+                    );
+                  } else if (basePrice > 0) {
+                    return <span className="text-3xl font-bold text-primary-600">₹{Math.round(basePrice)}</span>;
+                  } else {
+                    return <span className="text-2xl font-bold text-primary-600">{product.priceTier || 'Price on request'}</span>;
+                  }
+                })()}
                 {product.difficulty && (
                   <span className="badge badge-info">{product.difficulty}</span>
                 )}
                 {product.productionTime && (
                   <span className="flex items-center text-sm text-slate-600">
                     <ShoppingCart className="w-4 h-4 mr-1" />
-                    {product.productionTime}
+                    {product.productionTime} days
                   </span>
                 )}
               </div>

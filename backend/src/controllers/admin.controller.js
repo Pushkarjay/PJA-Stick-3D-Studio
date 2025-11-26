@@ -151,10 +151,37 @@ exports.createProduct = async (req, res, next) => {
       imageUrls = [productData.imageUrl, ...imageUrls];
     }
 
+    // Build pricing object for consistent frontend usage
+    const actualPrice = parseFloat(productData.actualPrice) || parseFloat(productData.price) || 0;
+    const baseDiscount = parseFloat(productData.baseDiscount) || 0;
+    const extraDiscount = parseFloat(productData.extraDiscount) || 0;
+    const totalDiscountPercent = baseDiscount + extraDiscount;
+    const discountedPrice = parseFloat(productData.discountedPrice) || (actualPrice - (actualPrice * totalDiscountPercent / 100));
+    const discount = actualPrice - discountedPrice;
+
     const product = {
       ...productData,
       imageUrls,
+      // Store both flat fields and pricing object for compatibility
+      price: actualPrice,
+      actualPrice,
+      baseDiscount,
+      extraDiscount,
+      discountedPrice,
+      discount,
+      // Structured pricing object for ProductModal and other components
+      pricing: {
+        basePrice: actualPrice,
+        discountedPrice: discountedPrice,
+        discount: discount,
+        discountBreakdown: {
+          baseDiscount: baseDiscount,
+          extraDiscount: extraDiscount,
+          totalPercent: totalDiscountPercent
+        }
+      },
       isActive: productData.isActive !== undefined ? productData.isActive : true,
+      isFeatured: productData.isFeatured || false,
       createdAt: new Date(),
       updatedAt: new Date(),
       createdBy: req.user.uid
@@ -198,6 +225,32 @@ exports.updateProduct = async (req, res, next) => {
       updates.imageUrls = imageUrls;
       delete updates.imageUrl;
     }
+
+    // Build pricing object for consistent frontend usage
+    const actualPrice = parseFloat(updates.actualPrice) || parseFloat(updates.price) || 0;
+    const baseDiscount = parseFloat(updates.baseDiscount) || 0;
+    const extraDiscount = parseFloat(updates.extraDiscount) || 0;
+    const totalDiscountPercent = baseDiscount + extraDiscount;
+    const discountedPrice = parseFloat(updates.discountedPrice) || (actualPrice - (actualPrice * totalDiscountPercent / 100));
+    const discount = actualPrice - discountedPrice;
+
+    // Update pricing fields
+    updates.price = actualPrice;
+    updates.actualPrice = actualPrice;
+    updates.baseDiscount = baseDiscount;
+    updates.extraDiscount = extraDiscount;
+    updates.discountedPrice = discountedPrice;
+    updates.discount = discount;
+    updates.pricing = {
+      basePrice: actualPrice,
+      discountedPrice: discountedPrice,
+      discount: discount,
+      discountBreakdown: {
+        baseDiscount: baseDiscount,
+        extraDiscount: extraDiscount,
+        totalPercent: totalDiscountPercent
+      }
+    };
 
     // Remove any undefined fields to avoid Firestore errors
     Object.keys(updates).forEach(key => updates[key] === undefined && delete updates[key]);

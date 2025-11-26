@@ -17,24 +17,34 @@ export default function ProductCard({ product, style, onProductClick }) {
   }
 
   const renderPrice = () => {
-    if (product.discount > 0) {
+    // Support both flat fields and nested pricing object
+    const basePrice = product.pricing?.basePrice || product.actualPrice || product.price;
+    const discountedPrice = product.pricing?.discountedPrice || product.discountedPrice;
+    const hasDiscount = discountedPrice && basePrice && discountedPrice < basePrice;
+    
+    if (hasDiscount) {
       return (
         <div className="flex items-baseline gap-2">
-          <span className="text-2xl font-bold text-slate-900">₹{product.price - product.discount}</span>
-          <span className="text-lg font-medium text-slate-400 line-through">₹{product.price}</span>
+          <span className="text-2xl font-bold text-slate-900">₹{Math.round(discountedPrice)}</span>
+          <span className="text-lg font-medium text-slate-400 line-through">₹{Math.round(basePrice)}</span>
         </div>
       )
     }
-    if (product.price > 0) {
-      return <span className="text-2xl font-bold text-slate-900">₹{product.price}</span>
+    if (basePrice > 0) {
+      return <span className="text-2xl font-bold text-slate-900">₹{Math.round(basePrice)}</span>
     }
     return <span className="text-slate-500 text-sm">Price on request</span>
   }
 
-  const averageRating = product.averageRating || 0;
-  const reviewCount = product.reviewCount || 0;
+  const averageRating = product.stats?.averageRating || product.averageRating || 0;
+  const reviewCount = product.stats?.reviewCount || product.reviewCount || 0;
   const stockStatus = product.stockQty > 0 ? 'In Stock' : 'Out of Stock';
-  const hasDiscount = product.discount > 0;
+  
+  // Calculate discount percentage for badge
+  const basePrice = product.pricing?.basePrice || product.actualPrice || product.price;
+  const discountedPrice = product.pricing?.discountedPrice || product.discountedPrice;
+  const hasDiscount = discountedPrice && basePrice && discountedPrice < basePrice;
+  const discountPercent = hasDiscount ? Math.round(((basePrice - discountedPrice) / basePrice) * 100) : 0;
 
   return (
     <div
@@ -73,8 +83,11 @@ export default function ProductCard({ product, style, onProductClick }) {
         </div>
         {/* Tags & Badges */}
         <div className="absolute top-2 left-2 flex flex-col gap-1">
-          {hasDiscount && (
-            <span className="badge badge-accent shadow-md">SAVE {((product.discount / product.price) * 100).toFixed(0)}%</span>
+          {hasDiscount && discountPercent > 0 && (
+            <span className="badge badge-accent shadow-md">SAVE {discountPercent}%</span>
+          )}
+          {product.isFeatured && (
+            <span className="badge badge-secondary shadow-md">Featured</span>
           )}
           {product.tags?.includes('New Arrival') && (
             <span className="badge badge-info shadow-md">New</span>

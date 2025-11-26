@@ -167,9 +167,12 @@ export default function ProductModal({ product, onClose }) {
     }
   };
 
-  const discountedPrice = product.pricing?.discountedPrice;
-  const basePrice = product.pricing?.basePrice;
+  // Support both flat fields and nested pricing object
+  const basePrice = product.pricing?.basePrice || product.actualPrice || product.price || 0;
+  const discountedPrice = product.pricing?.discountedPrice || product.discountedPrice || basePrice;
   const hasDiscount = discountedPrice && basePrice && discountedPrice < basePrice;
+  const baseDiscountPercent = product.pricing?.discountBreakdown?.baseDiscount || product.baseDiscount || 0;
+  const extraDiscountPercent = product.pricing?.discountBreakdown?.extraDiscount || product.extraDiscount || 0;
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center p-4 animate-fade-in-fast" onClick={onClose}>
@@ -202,15 +205,15 @@ export default function ProductModal({ product, onClose }) {
                 <div className="mb-4">
                     {hasDiscount ? (
                         <div className="flex items-baseline gap-3">
-                            <span className="text-4xl font-bold text-primary-600">₹{discountedPrice}</span>
-                            <span className="text-xl font-medium text-slate-400 line-through">₹{basePrice}</span>
+                            <span className="text-4xl font-bold text-primary-600">₹{Math.round(discountedPrice)}</span>
+                            <span className="text-xl font-medium text-slate-400 line-through">₹{Math.round(basePrice)}</span>
                         </div>
                     ) : (
-                        basePrice && <span className="text-4xl font-bold text-slate-900">₹{basePrice}</span>
+                        basePrice > 0 && <span className="text-4xl font-bold text-slate-900">₹{Math.round(basePrice)}</span>
                     )}
-                    {product.pricing?.discountBreakdown && (
+                    {(baseDiscountPercent > 0 || extraDiscountPercent > 0) && (
                         <p className="text-sm text-green-600 font-semibold mt-1">
-                            Includes {product.pricing.discountBreakdown.baseDiscount}% base + {product.pricing.discountBreakdown.extraDiscount}% extra discount
+                            Includes {baseDiscountPercent}% base + {extraDiscountPercent}% extra discount
                         </p>
                     )}
                 </div>
@@ -219,9 +222,11 @@ export default function ProductModal({ product, onClose }) {
 
                 <div className="mt-6 border-t pt-4 space-y-3">
                     {product.category && <p><strong>Category:</strong> {product.category}</p>}
-                    {product.subcategory && <p><strong>Subcategory:</strong> {product.subcategory}</p>}
+                    {product.subCategory && <p><strong>Subcategory:</strong> {product.subCategory}</p>}
                     {product.productionTime && <p><strong>Production Time:</strong> {product.productionTime} days</p>}
-                    {product.stock && <p><strong>Availability:</strong> {product.stock > 0 ? `${product.stock} in stock` : 'Available on backorder'}</p>}
+                    {product.stockQty !== undefined && <p><strong>Availability:</strong> {product.stockQty > 0 ? `${product.stockQty} in stock` : 'Available on backorder'}</p>}
+                    {product.difficulty && <p><strong>Difficulty:</strong> {product.difficulty}</p>}
+                    {product.priceTier && <p><strong>Price Tier:</strong> {product.priceTier}</p>}
                 </div>
               </div>
 

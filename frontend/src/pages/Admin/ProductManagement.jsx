@@ -61,63 +61,100 @@ export default function ProductManagement() {
             <tr>
               <th className="text-left p-4 text-sm font-medium text-slate-600">Product</th>
               <th className="text-left p-4 text-sm font-medium text-slate-600">Category</th>
-              <th className="text-left p-4 text-sm font-medium text-slate-600">Price Tier</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-600">Price</th>
+              <th className="text-left p-4 text-sm font-medium text-slate-600">Discount</th>
               <th className="text-left p-4 text-sm font-medium text-slate-600">Stock</th>
               <th className="text-left p-4 text-sm font-medium text-slate-600">Status</th>
               <th className="text-right p-4 text-sm font-medium text-slate-600">Actions</th>
             </tr>
           </thead>
           <tbody>
-            {products.map((product) => (
-              <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
-                <td className="p-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
-                      {(product.imageUrls?.[0] || product.imageUrl) ? (
-                        <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Package className="w-6 h-6 text-slate-300" />
+            {products.map((product) => {
+              const basePrice = product.pricing?.basePrice || product.actualPrice || product.price || 0;
+              const discountedPrice = product.pricing?.discountedPrice || product.discountedPrice || basePrice;
+              const hasDiscount = discountedPrice < basePrice;
+              const discountPercent = hasDiscount ? Math.round(((basePrice - discountedPrice) / basePrice) * 100) : 0;
+              
+              return (
+                <tr key={product.id} className="border-b border-slate-100 hover:bg-slate-50">
+                  <td className="p-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-lg overflow-hidden bg-slate-100 flex-shrink-0">
+                        {(product.imageUrls?.[0] || product.imageUrl) ? (
+                          <img src={product.imageUrls?.[0] || product.imageUrl} alt={product.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center">
+                            <Package className="w-6 h-6 text-slate-300" />
+                          </div>
+                        )}
+                      </div>
+                      <div>
+                        <div className="font-medium text-slate-900 flex items-center gap-2">
+                          {product.name}
+                          {product.isFeatured && <span className="badge badge-secondary text-xs">Featured</span>}
                         </div>
-                      )}
+                        <div className="text-sm text-slate-600 line-clamp-1">{product.description}</div>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-slate-900">{product.name}</div>
-                      <div className="text-sm text-slate-600 line-clamp-1">{product.description}</div>
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">
+                    {product.category}
+                    {product.subCategory && <span className="text-slate-400"> / {product.subCategory}</span>}
+                  </td>
+                  <td className="p-4">
+                    {basePrice > 0 ? (
+                      <div>
+                        {hasDiscount ? (
+                          <>
+                            <div className="font-medium text-primary-600">₹{Math.round(discountedPrice)}</div>
+                            <div className="text-xs text-slate-400 line-through">₹{Math.round(basePrice)}</div>
+                          </>
+                        ) : (
+                          <div className="font-medium text-slate-900">₹{Math.round(basePrice)}</div>
+                        )}
+                        {product.priceTier && <div className="text-xs text-slate-500">Tier: {product.priceTier}</div>}
+                      </div>
+                    ) : (
+                      <span className="text-sm text-slate-400">{product.priceTier || 'N/A'}</span>
+                    )}
+                  </td>
+                  <td className="p-4">
+                    {hasDiscount ? (
+                      <span className="badge badge-accent">{discountPercent}% OFF</span>
+                    ) : (
+                      <span className="text-slate-400 text-sm">-</span>
+                    )}
+                  </td>
+                  <td className="p-4 text-sm text-slate-600">{product.stockQty ?? '-'}</td>
+                  <td className="p-4">
+                    <span className={`badge ${product.isActive ? 'badge-success' : 'badge-error'}`}>
+                      {product.isActive ? 'Active' : 'Inactive'}
+                    </span>
+                  </td>
+                  <td className="p-4">
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        onClick={() => {
+                          setEditingProduct(product)
+                          setShowProductForm(true)
+                        }}
+                        className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+                        aria-label="Edit product"
+                      >
+                        <Edit className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => handleDeleteProduct(product.id)}
+                        className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
+                        aria-label="Delete product"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
-                </td>
-                <td className="p-4 text-sm text-slate-600">{product.category}</td>
-                <td className="p-4 text-sm font-medium text-primary-600">{product.priceTier}</td>
-                <td className="p-4 text-sm text-slate-600">{product.stockQty}</td>
-                <td className="p-4">
-                  <span className={`badge ${product.isActive ? 'badge-success' : 'badge-error'}`}>
-                    {product.isActive ? 'Active' : 'Inactive'}
-                  </span>
-                </td>
-                <td className="p-4">
-                  <div className="flex items-center justify-end gap-2">
-                    <button
-                      onClick={() => {
-                        setEditingProduct(product)
-                        setShowProductForm(true)
-                      }}
-                      className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
-                      aria-label="Edit product"
-                    >
-                      <Edit className="w-4 h-4" />
-                    </button>
-                    <button
-                      onClick={() => handleDeleteProduct(product.id)}
-                      className="p-2 hover:bg-red-50 hover:text-red-600 rounded-lg transition-colors"
-                      aria-label="Delete product"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </button>
-                  </div>
-                </td>
-              </tr>
-            ))}
+                  </td>
+                </tr>
+              );
+            })}
           </tbody>
         </table>
         {products.length === 0 && (
