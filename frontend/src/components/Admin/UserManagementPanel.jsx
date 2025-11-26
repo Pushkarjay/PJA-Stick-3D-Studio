@@ -121,8 +121,8 @@ export default function UserManagementPanel() {
         setLoading(true);
         try {
             const token = await currentUser.getIdToken();
-            const data = await apiRequest('/api/users', {}, token);
-            setUsers(data || []);
+            const response = await apiRequest('/api/users', {}, token);
+            setUsers(response.data || []);
         } catch (error) {
             console.error("Failed to fetch users:", error);
         } finally {
