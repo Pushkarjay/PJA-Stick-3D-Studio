@@ -1,10 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const billingController = require('../controllers/billing.controller');
-const { authenticate, isAdmin } = require('../middleware/auth');
+const { verifyFirebaseToken, verifyAdmin } = require('../middleware/authFirebase');
 
 // All billing routes require admin authentication
-router.use(authenticate, isAdmin);
+router.use(verifyFirebaseToken, verifyAdmin);
 
 // Get all billing data
 router.get('/', billingController.getBillingData);
