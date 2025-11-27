@@ -220,9 +220,26 @@ export default function ProductModal({ product, onClose }) {
 
                 {product.description && <p className="text-slate-600 mt-4" dangerouslySetInnerHTML={{ __html: product.description }} />}
 
+                {/* Features Section */}
+                {product.features && product.features.length > 0 && (
+                  <div className="mt-6 border-t pt-4">
+                    <h4 className="font-semibold text-slate-800 mb-3">Features</h4>
+                    <ul className="space-y-2">
+                      {product.features.map((feature, index) => (
+                        <li key={index} className="flex items-start gap-2 text-slate-600">
+                          <span className="text-primary-500 mt-0.5">✓</span>
+                          <span>{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
                 <div className="mt-6 border-t pt-4 space-y-3">
                     {product.category && <p><strong>Category:</strong> {product.category}</p>}
                     {product.subCategory && <p><strong>Subcategory:</strong> {product.subCategory}</p>}
+                    {product.material && <p><strong>Material:</strong> {product.material}</p>}
+                    {product.theme && <p><strong>Theme/Vibe:</strong> {product.theme}</p>}
                     {product.productionTime && <p><strong>Production Time:</strong> {product.productionTime} days</p>}
                     {product.stockQty !== undefined && <p><strong>Availability:</strong> {product.stockQty > 0 ? `${product.stockQty} in stock` : 'Available on backorder'}</p>}
                     {product.difficulty && <p><strong>Difficulty:</strong> {product.difficulty}</p>}

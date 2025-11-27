@@ -30,19 +30,19 @@ const getProducts = async (req, res, next) => {
     }
     // If includeInactive is 'true', we don't apply any isActive filter.
 
-    // Filter by category
-    if (category) {
+    // Filter by category (ignore 'All')
+    if (category && category !== 'All') {
       query = query.where('category', '==', category);
     }
 
-    // Filter by material/finish
-    if (material) {
-      query = query.where('specifications.material', '==', material);
+    // Filter by material/finish (ignore 'All')
+    if (material && material !== 'All') {
+      query = query.where('material', '==', material);
     }
 
-    // Filter by theme/vibe
-    if (theme) {
-      query = query.where('specifications.theme', '==', theme);
+    // Filter by theme/vibe (ignore 'All')
+    if (theme && theme !== 'All') {
+      query = query.where('theme', '==', theme);
     }
 
     // Sorting

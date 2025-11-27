@@ -53,7 +53,7 @@ export async function apiRequest(endpoint, options = {}, token = null) {
 
 /**
  * Get all products with optional filtering
- * @param {object} filters - { category, search, isActive }
+ * @param {object} filters - { category, search, isActive, material, theme, features, sort }
  */
 export async function getProducts(filters = {}) {
   const params = new URLSearchParams()
@@ -61,8 +61,16 @@ export async function getProducts(filters = {}) {
   // Add all filter key/value pairs to the params
   for (const key in filters) {
     const value = filters[key];
+    // Skip 'All' values and empty arrays
     if (value && value !== 'All') {
-      params.append(key, value);
+      if (Array.isArray(value)) {
+        // For features array, join with comma
+        if (value.length > 0) {
+          params.append(key, value.join(','));
+        }
+      } else {
+        params.append(key, value);
+      }
     }
   }
 

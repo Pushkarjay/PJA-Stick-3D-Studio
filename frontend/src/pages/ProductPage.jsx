@@ -123,6 +123,22 @@ export default function ProductPage() {
               <h1 className="text-3xl font-display font-bold text-slate-900">{product.name}</h1>
               <div className="text-slate-600 mb-2">{product.category}</div>
               <div className="text-lg text-slate-700 mb-4">{product.description}</div>
+              
+              {/* Features Section */}
+              {product.features && product.features.length > 0 && (
+                <div className="bg-slate-50 rounded-lg p-4 mb-4">
+                  <h3 className="font-semibold text-slate-800 mb-3">Features</h3>
+                  <ul className="space-y-2">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-2 text-slate-600">
+                        <span className="text-primary-500 mt-0.5">✓</span>
+                        <span>{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
               <div className="flex items-center gap-4 mb-4">
                 {/* Price display - support both flat fields and nested pricing */}
                 {(() => {
