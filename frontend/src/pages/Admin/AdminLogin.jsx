@@ -24,7 +24,18 @@ export default function AdminLogin() {
       // Force immediate redirect - the AdminLayout will handle auth check
       window.location.href = '/admin/dashboard'
     } catch (error) {
-      setLoginError(error.message)
+      // Map Firebase error codes to user-friendly messages
+      const errorMessages = {
+        'auth/invalid-email': 'Invalid email address format.',
+        'auth/user-disabled': 'This account has been disabled.',
+        'auth/user-not-found': 'No account found with this email.',
+        'auth/wrong-password': 'Incorrect password.',
+        'auth/invalid-credential': 'Invalid email or password. Please check your credentials.',
+        'auth/too-many-requests': 'Too many failed attempts. Please try again later.',
+        'auth/network-request-failed': 'Network error. Please check your connection.',
+      }
+      const friendlyMessage = errorMessages[error.code] || error.message || 'Login failed. Please try again.'
+      setLoginError(friendlyMessage)
     }
   }
 
