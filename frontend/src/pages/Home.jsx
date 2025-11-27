@@ -23,11 +23,66 @@ export default function Home() {
     features: [],
   });
 
+  // Helper function to sort products client-side
+  const sortProducts = (products, sortType) => {
+    const sorted = [...products];
+    
+    switch (sortType) {
+      case 'price-asc':
+        return sorted.sort((a, b) => {
+          const priceA = a.pricing?.discountedPrice || a.discountedPrice || a.actualPrice || a.price || 0;
+          const priceB = b.pricing?.discountedPrice || b.discountedPrice || b.actualPrice || b.price || 0;
+          return priceA - priceB;
+        });
+      case 'price-desc':
+        return sorted.sort((a, b) => {
+          const priceA = a.pricing?.discountedPrice || a.discountedPrice || a.actualPrice || a.price || 0;
+          const priceB = b.pricing?.discountedPrice || b.discountedPrice || b.actualPrice || b.price || 0;
+          return priceB - priceA;
+        });
+      case 'alpha-asc':
+        return sorted.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+      case 'alpha-desc':
+        return sorted.sort((a, b) => (b.name || '').localeCompare(a.name || ''));
+      case 'featured':
+        return sorted.sort((a, b) => {
+          if (a.isFeatured === b.isFeatured) {
+            const dateA = a.createdAt?.seconds || new Date(a.createdAt).getTime() / 1000 || 0;
+            const dateB = b.createdAt?.seconds || new Date(b.createdAt).getTime() / 1000 || 0;
+            return dateB - dateA;
+          }
+          return b.isFeatured ? 1 : -1;
+        });
+      case 'best-selling':
+        return sorted.sort((a, b) => (b.stats?.salesCount || 0) - (a.stats?.salesCount || 0));
+      case 'date-asc':
+        return sorted.sort((a, b) => {
+          const dateA = a.createdAt?.seconds || new Date(a.createdAt).getTime() / 1000 || 0;
+          const dateB = b.createdAt?.seconds || new Date(b.createdAt).getTime() / 1000 || 0;
+          return dateA - dateB;
+        });
+      case 'date-desc':
+      default:
+        return sorted.sort((a, b) => {
+          const dateA = a.createdAt?.seconds || new Date(a.createdAt).getTime() / 1000 || 0;
+          const dateB = b.createdAt?.seconds || new Date(b.createdAt).getTime() / 1000 || 0;
+          return dateB - dateA;
+        });
+    }
+  };
+
   const fetchProducts = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await getProducts({ ...filters, isActive: true });
-      setProducts(data.data || []);
+      // Don't send sort to backend - we'll sort client-side for reliability
+      const { sort, ...filtersWithoutSort } = filters;
+      const data = await getProducts({ ...filtersWithoutSort, isActive: true });
+      let fetchedProducts = data.data || [];
+      
+      // Client-side sorting for reliability (Firestore indexes can be tricky)
+      fetchedProducts = sortProducts(fetchedProducts, sort);
+      
+      setProducts(fetchedProducts);
     } catch (error) {
       console.error('Error fetching products:', error);
       // TODO: Show error toast/notification
