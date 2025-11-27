@@ -3,6 +3,8 @@ import { AuthProvider, useAuth } from './hooks/useAuth'
 import { CartProvider } from './hooks/useCart'
 
 import Home from './pages/Home'
+import Login from './pages/Login'
+import Profile from './pages/Profile'
 import AdminLayout from './pages/AdminLayout'
 import Dashboard from './pages/Admin/Dashboard'
 import ProductManagement from './pages/Admin/ProductManagement'
@@ -49,6 +51,8 @@ function App() {
         <Router>
           <Routes>
             <Route path="/" element={<Home />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/profile" element={<Profile />} />
             <Route path="/products" element={<Products />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />

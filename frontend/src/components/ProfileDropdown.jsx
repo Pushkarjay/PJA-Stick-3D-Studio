@@ -1,4 +1,4 @@
-import { User, LogIn, LogOut, MessageCircle, Instagram } from 'lucide-react';
+import { User, LogIn, LogOut, MessageCircle } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useState, useEffect } from 'react';
@@ -8,7 +8,6 @@ export default function ProfileDropdown() {
   const { user, loading, logout, isAdmin } = useAuth()
   const [isOpen, setIsOpen] = useState(false)
   const [whatsappNumber, setWhatsappNumber] = useState('916372362313')
-  const [instagramHandle, setInstagramHandle] = useState('')
 
   useEffect(() => {
     const fetchSettings = async () => {
@@ -17,9 +16,6 @@ export default function ProfileDropdown() {
         const settings = response.data || response
         if (settings.contact?.whatsapp) {
           setWhatsappNumber(settings.contact.whatsapp.replace(/[^0-9]/g, ''))
-        }
-        if (settings.socialLinks?.instagram) {
-          setInstagramHandle(settings.socialLinks.instagram)
         }
       } catch (e) {
         // Use defaults
@@ -31,12 +27,6 @@ export default function ProfileDropdown() {
   const openWhatsApp = () => {
     const message = encodeURIComponent('Hi! I would like to place an order.')
     window.open(`https://wa.me/${whatsappNumber}?text=${message}`, '_blank')
-  }
-
-  const openInstagram = () => {
-    if (instagramHandle) {
-      window.open(instagramHandle, '_blank')
-    }
   }
 
   if (loading) {
@@ -72,6 +62,14 @@ export default function ProfileDropdown() {
                 <p className="text-sm font-semibold truncate">{user.displayName || 'User'}</p>
                 <p className="text-xs text-slate-500 truncate">{user.email}</p>
               </div>
+              <Link
+                to="/profile"
+                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100"
+                onClick={() => setIsOpen(false)}
+              >
+                <User className="w-4 h-4" />
+                My Profile
+              </Link>
               {isAdmin && (
                 <Link
                   to="/admin/dashboard"
@@ -95,41 +93,25 @@ export default function ProfileDropdown() {
             </>
           ) : (
             <>
-              <div className="px-4 py-3 border-b">
-                <p className="text-sm font-semibold">Order via Social Media</p>
-                <p className="text-xs text-slate-500">We take orders on WhatsApp & Instagram</p>
-              </div>
-              <button
-                onClick={() => {
-                  openWhatsApp()
-                  setIsOpen(false)
-                }}
-                className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-green-50 text-green-600"
+              <Link
+                to="/login"
+                className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100"
+                onClick={() => setIsOpen(false)}
               >
-                <MessageCircle className="w-4 h-4" />
-                Order on WhatsApp
-              </button>
-              {instagramHandle && (
+                <LogIn className="w-4 h-4" />
+                Login / Sign Up
+              </Link>
+              <div className="border-t">
                 <button
                   onClick={() => {
-                    openInstagram()
+                    openWhatsApp()
                     setIsOpen(false)
                   }}
-                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-pink-50 text-pink-600"
+                  className="flex items-center gap-2 w-full text-left px-4 py-2 text-sm hover:bg-green-50 text-green-600"
                 >
-                  <Instagram className="w-4 h-4" />
-                  Order on Instagram
+                  <MessageCircle className="w-4 h-4" />
+                  Order on WhatsApp
                 </button>
-              )}
-              <div className="border-t">
-                <Link
-                  to="/admin/login"
-                  className="flex items-center gap-2 px-4 py-2 text-sm hover:bg-slate-100 text-slate-500"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <LogIn className="w-4 h-4" />
-                  Admin Login
-                </Link>
               </div>
             </>
           )}
