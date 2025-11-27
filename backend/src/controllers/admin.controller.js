@@ -504,11 +504,23 @@ exports.createAdmin = async (req, res, next) => {
     // Set custom claim to identify user as an admin
     await admin.auth().setCustomUserClaims(userRecord.uid, { admin: true });
 
-    // Optionally, save admin details to Firestore
+    const now = new Date();
+    
+    // Save admin details to BOTH collections for compatibility
+    // The 'users' collection is checked by auth middleware
+    await db.collection('users').doc(userRecord.uid).set({
+      email,
+      displayName: name,
+      role: 'admin',
+      createdAt: now,
+      updatedAt: now,
+    });
+    
+    // Also save to 'admins' collection for the admin management page
     await db.collection('admins').doc(userRecord.uid).set({
       name,
       email,
-      createdAt: new Date(),
+      createdAt: now,
       status: 'Active',
     });
 
@@ -517,7 +529,7 @@ exports.createAdmin = async (req, res, next) => {
     res.status(201).json({
       success: true,
       message: 'Admin user created successfully',
-      data: { uid: userRecord.uid },
+      data: { uid: userRecord.uid, email, displayName: name },
     });
   } catch (error) {
     logger.error('Error creating admin user:', error);
@@ -537,7 +549,13 @@ exports.getAdmins = async (req, res, next) => {
     const snapshot = await db.collection('admins').get();
     const admins = [];
     snapshot.forEach(doc => {
-      admins.push({ id: doc.id, ...doc.data() });
+      const data = doc.data();
+      // Convert Firestore Timestamp to ISO string for proper JSON serialization
+      admins.push({ 
+        id: doc.id, 
+        ...data,
+        createdAt: data.createdAt?.toDate?.() ? data.createdAt.toDate().toISOString() : data.createdAt
+      });
     });
     res.json({ success: true, data: admins });
   } catch (error) {
@@ -556,7 +574,16 @@ exports.updateAdmin = async (req, res, next) => {
     if (name) updates.name = name;
     if (status) updates.status = status;
 
+    // Update in admins collection
     await db.collection('admins').doc(id).update(updates);
+    
+    // Also update in users collection if exists
+    const userDoc = await db.collection('users').doc(id).get();
+    if (userDoc.exists) {
+      const userUpdates = { updatedAt: new Date() };
+      if (name) userUpdates.displayName = name;
+      await db.collection('users').doc(id).update(userUpdates);
+    }
 
     logger.info(`Admin ${id} updated by ${req.user.email}`);
     res.json({ success: true, message: 'Admin updated successfully.' });
@@ -571,14 +598,79 @@ exports.updateAdmin = async (req, res, next) => {
 exports.deleteAdmin = async (req, res, next) => {
   try {
     const { id } = req.params;
-    // Deactivate in Firestore
-    await db.collection('admins').doc(id).update({ status: 'Inactive' });
+    
+    // Deactivate in admins collection
+    await db.collection('admins').doc(id).update({ status: 'Inactive', updatedAt: new Date() });
+    
+    // Also update role in users collection to revoke access
+    const userDoc = await db.collection('users').doc(id).get();
+    if (userDoc.exists) {
+      await db.collection('users').doc(id).update({ 
+        role: 'customer', // Demote to customer
+        updatedAt: new Date() 
+      });
+    }
+    
     // Disable in Firebase Auth
     await admin.auth().updateUser(id, { disabled: true });
 
     logger.info(`Admin ${id} deleted (deactivated) by ${req.user.email}`);
     res.json({ success: true, message: 'Admin user deactivated successfully.' });
   } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Migrate existing admins to users collection (one-time fix)
+ */
+exports.migrateAdmins = async (req, res, next) => {
+  try {
+    const adminsSnapshot = await db.collection('admins').get();
+    let migrated = 0;
+    let skipped = 0;
+    
+    for (const adminDoc of adminsSnapshot.docs) {
+      const adminData = adminDoc.data();
+      const uid = adminDoc.id;
+      
+      // Check if user already exists in users collection
+      const userDoc = await db.collection('users').doc(uid).get();
+      
+      if (!userDoc.exists) {
+        // Create user document
+        await db.collection('users').doc(uid).set({
+          email: adminData.email,
+          displayName: adminData.name,
+          role: adminData.status === 'Active' ? 'admin' : 'customer',
+          createdAt: adminData.createdAt || new Date(),
+          updatedAt: new Date(),
+        });
+        migrated++;
+        logger.info(`Migrated admin ${adminData.email} to users collection`);
+      } else {
+        // Update role if user exists but isn't admin
+        const userData = userDoc.data();
+        if (userData.role !== 'admin' && userData.role !== 'super_admin' && adminData.status === 'Active') {
+          await db.collection('users').doc(uid).update({
+            role: 'admin',
+            updatedAt: new Date(),
+          });
+          migrated++;
+          logger.info(`Updated ${adminData.email} role to admin`);
+        } else {
+          skipped++;
+        }
+      }
+    }
+    
+    logger.info(`Admin migration complete: ${migrated} migrated, ${skipped} skipped`);
+    res.json({ 
+      success: true, 
+      message: `Migration complete: ${migrated} admins migrated, ${skipped} already existed` 
+    });
+  } catch (error) {
+    logger.error('Error migrating admins:', error);
     next(error);
   }
 };

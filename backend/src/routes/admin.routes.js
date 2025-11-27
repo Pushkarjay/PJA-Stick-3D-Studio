@@ -32,5 +32,6 @@ router.post('/create-admin', adminController.createAdmin);
 router.get('/admins', adminController.getAdmins);
 router.put('/admins/:id', adminController.updateAdmin);
 router.delete('/admins/:id', adminController.deleteAdmin);
+router.post('/admins/migrate', adminController.migrateAdmins);
 
 module.exports = router;

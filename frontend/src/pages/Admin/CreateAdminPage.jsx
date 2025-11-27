@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '../../hooks/useAuth';
 import { apiRequest } from '../../lib/api';
 import toast from 'react-hot-toast';
-import { UserPlus, Eye, EyeOff, Trash2, Edit2, Shield, ShieldOff } from 'lucide-react';
+import { UserPlus, Eye, EyeOff, Trash2, Edit2, Shield, ShieldOff, RefreshCw } from 'lucide-react';
 
 export default function CreateAdminPage() {
   const { user } = useAuth();
@@ -10,6 +10,7 @@ export default function CreateAdminPage() {
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [migrating, setMigrating] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -88,12 +89,46 @@ export default function CreateAdminPage() {
 
   const formatDate = (timestamp) => {
     if (!timestamp) return 'N/A';
-    const date = timestamp.toDate ? timestamp.toDate() : new Date(timestamp);
+    // Handle ISO string, Firestore Timestamp, or Date object
+    let date;
+    if (typeof timestamp === 'string') {
+      date = new Date(timestamp);
+    } else if (timestamp.toDate) {
+      date = timestamp.toDate();
+    } else if (timestamp._seconds) {
+      date = new Date(timestamp._seconds * 1000);
+    } else {
+      date = new Date(timestamp);
+    }
+    
+    if (isNaN(date.getTime())) return 'N/A';
+    
     return date.toLocaleDateString('en-IN', {
       year: 'numeric',
       month: 'short',
       day: 'numeric',
     });
+  };
+
+  const handleMigrate = async () => {
+    if (!confirm('This will sync all admins to the users collection so they can login. Continue?')) {
+      return;
+    }
+    
+    try {
+      setMigrating(true);
+      const token = await user.getIdToken();
+      const response = await apiRequest('/api/admin/admins/migrate', {
+        method: 'POST',
+      }, token);
+      toast.success(response.message || 'Migration complete!');
+      fetchAdmins();
+    } catch (error) {
+      console.error('Migration error:', error);
+      toast.error(error.message || 'Migration failed');
+    } finally {
+      setMigrating(false);
+    }
   };
 
   return (
@@ -104,13 +139,24 @@ export default function CreateAdminPage() {
           <h1 className="text-2xl font-bold text-slate-800">Admin Users</h1>
           <p className="text-slate-500">Manage administrator accounts</p>
         </div>
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="btn btn-primary flex items-center gap-2"
-        >
-          <UserPlus className="w-5 h-5" />
-          Create Admin
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleMigrate}
+            disabled={migrating}
+            className="btn btn-secondary flex items-center gap-2"
+            title="Sync admins to enable login"
+          >
+            <RefreshCw className={`w-5 h-5 ${migrating ? 'animate-spin' : ''}`} />
+            {migrating ? 'Syncing...' : 'Sync Admins'}
+          </button>
+          <button
+            onClick={() => setShowForm(!showForm)}
+            className="btn btn-primary flex items-center gap-2"
+          >
+            <UserPlus className="w-5 h-5" />
+            Create Admin
+          </button>
+        </div>
       </div>
 
       {/* Create Admin Form */}
